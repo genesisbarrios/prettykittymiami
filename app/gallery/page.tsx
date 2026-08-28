@@ -62,7 +62,7 @@ export default function GalleryPage() {
               rel="noopener noreferrer"
               className="btn btn-primary btn-lg"
             >
-              See More on Instagram
+              See More Photos
             </a>
           </div>
         </section>

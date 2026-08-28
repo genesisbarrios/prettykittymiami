@@ -7,6 +7,18 @@ const InstagramIcon = () => (
   </svg>
 );
 
+const FacebookIcon = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+    <path d="M22 12.06C22 6.505 17.523 2 12 2S2 6.505 2 12.06c0 5.02 3.657 9.184 8.438 9.94v-7.03H7.898v-2.91h2.54V9.845c0-2.507 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562v1.878h2.773l-.443 2.91h-2.33V22c4.78-.756 8.437-4.92 8.437-9.94z" />
+  </svg>
+);
+
+const TikTokIcon = () => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+    <path d="M16.6 5.82c-.9-.98-1.4-2.26-1.4-3.62h-3.1v13.44a2.9 2.9 0 11-2.05-2.77V9.7a5.98 5.98 0 00-1-.09 6 6 0 106 6V9.94a8.5 8.5 0 004.9 1.56V8.4a5.6 5.6 0 01-3.35-2.58z" />
+  </svg>
+);
+
 const GoogleIcon = () => (
   <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
     <path d="M21.35 11.1h-9.17v2.73h6.51c-.33 3.81-3.5 5.44-6.5 5.44C8.36 19.27 5 16.25 5 12c0-4.1 3.2-7.27 7.2-7.27 3.09 0 4.9 1.97 4.9 1.97L19 4.72S16.56 2 12.1 2C6.42 2 2.03 6.8 2.03 12c0 5.05 4.13 10 10.22 10 5.35 0 9.25-3.67 9.25-9.09 0-1.15-.15-1.81-.15-1.81z" />
@@ -32,10 +44,11 @@ const PhoneIcon = () => (
   </svg>
 );
 
-// Renders Instagram / Google Business / primary CTA / phone as a row of
-// icon links. Used on the homepage and in the footer per client request that
-// all socials stay visible in both places. Google Business is skipped when
-// no link is configured (e.g. a client without a set-up listing yet).
+// Renders Instagram / Facebook / TikTok / Google Business / primary CTA /
+// phone as a row of icon links. Used on the homepage and in the footer per
+// client request that all socials stay visible in both places. Social
+// platform icons are icon-only (no text label) — Facebook/TikTok/Google
+// Business are skipped when no link is configured for a given client.
 export default function SocialLinks({
   variant = "default",
   className = "",
@@ -61,8 +74,33 @@ export default function SocialLinks({
         className={linkClass}
       >
         <InstagramIcon />
-        <span className="text-sm">Instagram</span>
       </a>
+
+      {config.facebookUrl && (
+        <a
+          href={config.facebookUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Facebook"
+          title="Facebook"
+          className={linkClass}
+        >
+          <FacebookIcon />
+        </a>
+      )}
+
+      {config.tiktokUrl && (
+        <a
+          href={config.tiktokUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="TikTok"
+          title="TikTok"
+          className={linkClass}
+        >
+          <TikTokIcon />
+        </a>
+      )}
 
       {config.googleBusinessUrl && (
         <a
@@ -74,7 +112,6 @@ export default function SocialLinks({
           className={linkClass}
         >
           <GoogleIcon />
-          <span className="text-sm">Google Reviews</span>
         </a>
       )}
 

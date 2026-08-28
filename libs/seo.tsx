@@ -87,7 +87,12 @@ export const renderLocalBusinessSchema = () => {
             "@type": "Place",
             name: `${area}, FL`,
           })),
-          sameAs: [config.instagramUrl, config.googleBusinessUrl].filter(Boolean),
+          sameAs: [
+            config.instagramUrl,
+            config.facebookUrl,
+            config.tiktokUrl,
+            config.googleBusinessUrl,
+          ].filter(Boolean),
         }),
       }}
     ></script>
