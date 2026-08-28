@@ -29,8 +29,8 @@ rebuilt on the same Enigma Labs client-site template used for
    adjust as needed:
 
    ```
-   NEXT_PUBLIC_ENIGMA_API_URL=
-   NEXT_PUBLIC_ADMIN_PASSWORD=
+   ENIGMA_API_URL=
+   ADMIN_PASSWORD=
    ```
    ```
 
@@ -57,7 +57,7 @@ npm run lint    # lint
 - `/gallery` — 10 real photos of rescued cats, pulled from the org's existing site
 - `/about` — founding story (2015 → 501(c)(3) in 2020), EIN, hours, founder photo, newsletter signup
 - `/contact` — contact form
-- `/admin` — password-gated subscriber list (contact form + newsletter signups), with CSV/XLSX export, copy-to-clipboard, and CSV/XLSX import. Password defaults to `pw` (`NEXT_PUBLIC_ADMIN_PASSWORD`), and must match `CRM_ADMIN_PASSWORD` on the backend.
+- `/admin` — password-gated subscriber list (contact form + newsletter signups), with CSV/XLSX export, copy-to-clipboard, and CSV/XLSX import. Password defaults to `pw` (`ADMIN_PASSWORD`), and must match `CRM_ADMIN_PASSWORD` on the backend.
 
 ## Notable differences from the other client templates
 
@@ -85,8 +85,8 @@ which changes a few things from the Monark/Javier/JaJa's sites:
 
 - [ ] Confirm the real EIN, address, and hours in `config.ts` against the organization's current records
 - [ ] Set `RESEND_API_KEY` on `enigma-node-server` so contact form emails actually send to `config.contactEmail`
-- [ ] Point `NEXT_PUBLIC_ENIGMA_API_URL` at the production `enigma-node-server` URL
-- [ ] Set a real `NEXT_PUBLIC_ADMIN_PASSWORD` / `CRM_ADMIN_PASSWORD` (both must match)
+- [ ] Point `ENIGMA_API_URL` at the production `enigma-node-server` URL
+- [ ] Set a real `ADMIN_PASSWORD` / `CRM_ADMIN_PASSWORD` (both must match)
 - [ ] Add a Google Business listing link to `config.googleBusinessUrl` once available
 - [ ] Decide whether this redesign replaces `prettykittymiamirescue.org` or lives elsewhere, and update `config.domainName` + CORS accordingly
 - [ ] Get current, real photos/names for adoptable cats if `/get-involved` should eventually list individual cats rather than program categories

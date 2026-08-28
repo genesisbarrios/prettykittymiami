@@ -14,7 +14,7 @@ interface Subscriber {
   createdAt: string;
 }
 
-const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "pw";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "pw";
 const SESSION_KEY = "prettykitty_admin_authed";
 
 function downloadBlob(content: BlobPart, filename: string, type: string) {
