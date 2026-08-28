@@ -32,12 +32,12 @@ export default function AboutPage() {
               since {config.nonprofit?.foundedYear}, and became an officially
               registered 501(c)(3) nonprofit in{" "}
               {config.nonprofit?.established501c3}. Since then, we&apos;ve
-              trapped, neutered, and returned (TNR) over 1,500 community
-              cats, and transported 1,300+ rehabilitated cats and kittens to
+              trapped, neutered, and returned (TNR) 3,000+ community
+              cats, and transported 3,000+ rehabilitated cats and kittens to
               partner shelters in the Northeast.
             </p>
             <p>
-              We currently care for 50+ cats and kittens — treating sick
+              We currently care for 30+ cats and kittens — treating sick
               animals, bottle-feeding orphans, and finding every one of them
               a safe path forward, whether that&apos;s adoption, fostering,
               or a healthy return to their colony.

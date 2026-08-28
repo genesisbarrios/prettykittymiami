@@ -26,7 +26,7 @@ export const getInvolvedOptions: GetInvolvedItem[] = [
   {
     name: "TNR (Trap-Neuter-Return)",
     price: "Learn More",
-    description: "We've TNR'd over 1,500 community cats in Miami-Dade.",
+    description: "We've TNR'd 3,000+ community cats in Miami-Dade.",
   },
   {
     name: "Care & Nursing",

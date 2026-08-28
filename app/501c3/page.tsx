@@ -42,9 +42,9 @@ export default function NonProfitPage() {
             </p>
             <p>
               Since our founding, we&apos;ve TNR&apos;d (trap-neuter-return)
-              over 1,500 community cats and transported 1,300+
+              3,000+ community cats and transported 3,000+
               rehabilitated cats and kittens to partner shelters in the
-              Northeast. We currently care for 50+ cats and kittens at any
+              Northeast. We currently care for 30+ cats and kittens at any
               given time.
             </p>
             <p>

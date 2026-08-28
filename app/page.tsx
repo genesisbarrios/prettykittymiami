@@ -13,7 +13,7 @@ import { getSEOTags } from "@/libs/seo";
 const faqs = [
   {
     q: "How do I know this is a legitimate rescue?",
-    a: `${config.nonprofit?.legalName} has been rescuing cats since ${config.nonprofit?.foundedYear} and became a registered 501(c)(3) nonprofit in ${config.nonprofit?.established501c3}. We've TNR'd over 1,500 community cats and transported 1,300+ rehabilitated cats and kittens to partner shelters in the Northeast.`,
+    a: `${config.nonprofit?.legalName} has been rescuing cats since ${config.nonprofit?.foundedYear} and became a registered 501(c)(3) nonprofit in ${config.nonprofit?.established501c3}. We've TNR'd 3,000+ community cats and transported 3,000+ rehabilitated cats and kittens to partner shelters in the Northeast.`,
   },
   {
     q: "Where does my donation go?",
@@ -115,15 +115,15 @@ export default function Home() {
             <div className="text-sm text-base-content/60 mt-1">Rescuing Since</div>
           </div>
           <div>
-            <div className="font-display text-4xl text-primary">1,500+</div>
+            <div className="font-display text-4xl text-primary">3,000+</div>
             <div className="text-sm text-base-content/60 mt-1">Cats TNR&apos;d</div>
           </div>
           <div>
-            <div className="font-display text-4xl text-primary">1,300+</div>
+            <div className="font-display text-4xl text-primary">3,000+</div>
             <div className="text-sm text-base-content/60 mt-1">Cats Transported to Shelters</div>
           </div>
           <div>
-            <div className="font-display text-4xl text-primary">50+</div>
+            <div className="font-display text-4xl text-primary">30+</div>
             <div className="text-sm text-base-content/60 mt-1">Cats in Our Care Now</div>
           </div>
         </section>
