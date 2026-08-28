@@ -59,10 +59,14 @@ export default function AboutPage() {
               FOUNDER
             </h2>
             <blockquote className="border-l-4 border-primary pl-6 text-base-content/80 italic leading-relaxed">
-              &ldquo;Our rescue is small but mighty. Pretty Kitty Miami-Dade
-              Rescue makes constant investments in medications and medical
-              supplies and maintains good relationships with other cat
-              rescues.&rdquo;
+              &ldquo;I help cats and the people who love them. Since 2015,
+              I&apos;ve dedicated myself to rescuing and rehabilitating
+              Miami&apos;s community cats running an active TNR program,
+              providing hands-on medical care and fostering, and
+              coordinating adoption transport to loving homes across the
+              northeastern U.S. I couldn&apos;t do this work without the
+              community of adopters, fosters, and supporters who make it
+              possible.&rdquo;
               <footer className="mt-3 text-sm not-italic text-base-content/60">
                 — Deb Pachano, PKMDR Founder
               </footer>

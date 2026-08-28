@@ -102,8 +102,10 @@ export default function AdminPage() {
       sessionStorage.setItem(SESSION_KEY, password);
       setAuthed(true);
       setAuthError("");
-    } else {
+    } else if (res.status === 401) {
       setAuthError("Wrong password.");
+    } else {
+      setAuthError("Could not reach the backend. Check ENIGMA_API_URL and try again.");
     }
   };
 
