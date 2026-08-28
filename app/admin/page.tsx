@@ -76,21 +76,49 @@ function parsePastedContacts(text: string): Record<string, any>[] {
     dataLines = lines.slice(1);
   }
 
-  return dataLines.map((line) => {
+  // Excel/Sheets wrap copied cells containing commas in quotes even when
+  // tab-delimited — strip stray leading/trailing quotes so they don't end
+  // up baked into the email/name/phone values.
+  const stripQuotes = (s: string) => s.trim().replace(/^"+|"+$/g, "");
+
+  const rows: Record<string, any>[] = [];
+
+  for (const line of dataLines) {
+    if (header && delimiter) {
+      const cells = line.split(delimiter).map(stripQuotes);
+      const row: Record<string, string> = {};
+      header.forEach((h, i) => (row[h] = cells[i] || ""));
+      rows.push(row);
+      continue;
+    }
+
+    const emailsOnLine = line.match(new RegExp(EMAIL_RE.source, "g")) || [];
+
+    // Multiple contacts pasted on one line — e.g. an email's To:/CC: field
+    // copied as "Jane Doe <jane@x.com>, John Smith <john@x.com>".
+    if (emailsOnLine.length > 1) {
+      line.split(/[,;]/).forEach((chunk) => {
+        const match = chunk
+          .trim()
+          .match(new RegExp(`^(.*?)[\\s<]*(${EMAIL_RE.source})>?$`));
+        if (match) rows.push({ name: stripQuotes(match[1]), email: match[2] });
+      });
+      continue;
+    }
+
     if (delimiter) {
-      const cells = line.split(delimiter).map((c) => c.trim());
-      if (header) {
-        const row: Record<string, string> = {};
-        header.forEach((h, i) => (row[h] = cells[i] || ""));
-        return row;
-      }
+      const cells = line.split(delimiter).map(stripQuotes);
       const email = cells.find((c) => EMAIL_RE.test(c)) || "";
       const rest = cells.filter((c) => c !== email);
-      return { name: rest[0] || "", email, phone: rest[1] || "" };
+      rows.push({ name: rest[0] || "", email, phone: rest[1] || "" });
+      continue;
     }
+
     const match = line.match(new RegExp(`^(.*?)[\\s<]*(${EMAIL_RE.source})>?$`));
-    return match ? { name: match[1].trim().replace(/[",]+$/, ""), email: match[2] } : { email: line };
-  });
+    rows.push(match ? { name: stripQuotes(match[1]), email: match[2] } : { email: line });
+  }
+
+  return rows;
 }
 
 export default function AdminPage() {
