@@ -51,6 +51,48 @@ function findField(row: Record<string, any>, candidates: string[]) {
   return "";
 }
 
+const EMAIL_RE = /[\w.+-]+@[\w-]+\.[\w.-]+/;
+
+// Turns text pasted from a spreadsheet (or just a plain list of
+// name/email/phone) into the same row shape handleImportFile produces, so
+// both paths share one import call. Handles: a header row (Name, Email,
+// Phone, Message) with tab or comma columns, columns with no header, or one
+// bare email per line.
+function parsePastedContacts(text: string): Record<string, any>[] {
+  const lines = text
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+  if (lines.length === 0) return [];
+
+  const delimiter = lines[0].includes("\t") ? "\t" : lines[0].includes(",") ? "," : null;
+  const looksLikeHeader =
+    !lines[0].includes("@") && /name|email|phone|message|notes/i.test(lines[0]);
+
+  let header: string[] | null = null;
+  let dataLines = lines;
+  if (delimiter && looksLikeHeader) {
+    header = lines[0].split(delimiter).map((h) => h.trim());
+    dataLines = lines.slice(1);
+  }
+
+  return dataLines.map((line) => {
+    if (delimiter) {
+      const cells = line.split(delimiter).map((c) => c.trim());
+      if (header) {
+        const row: Record<string, string> = {};
+        header.forEach((h, i) => (row[h] = cells[i] || ""));
+        return row;
+      }
+      const email = cells.find((c) => EMAIL_RE.test(c)) || "";
+      const rest = cells.filter((c) => c !== email);
+      return { name: rest[0] || "", email, phone: rest[1] || "" };
+    }
+    const match = line.match(new RegExp(`^(.*?)[\\s<]*(${EMAIL_RE.source})>?$`));
+    return match ? { name: match[1].trim().replace(/[",]+$/, ""), email: match[2] } : { email: line };
+  });
+}
+
 export default function AdminPage() {
   const [authed, setAuthed] = useState(false);
   const [password, setPassword] = useState("");
@@ -61,6 +103,8 @@ export default function AdminPage() {
   const [loadError, setLoadError] = useState("");
   const [copyLabel, setCopyLabel] = useState("Copy");
   const [importStatus, setImportStatus] = useState("");
+  const [showPaste, setShowPaste] = useState(false);
+  const [pasteText, setPasteText] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -135,33 +179,25 @@ export default function AdminPage() {
 
   const handleImportClick = () => fileInputRef.current?.click();
 
-  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  // Shared by both the file-upload and paste-contacts flows: normalize raw
+  // rows (whatever their original column names/casing were), then POST.
+  const importRows = async (rawRows: Record<string, any>[]) => {
+    const parsed = rawRows
+      .map((row) => ({
+        name: findField(row, ["name", "full name"]),
+        email: findField(row, ["email", "email address"]),
+        phone: findField(row, ["phone", "phone number"]),
+        message: findField(row, ["message", "notes"]),
+      }))
+      .filter((row) => row.email);
 
-    setImportStatus("Reading file...");
+    if (parsed.length === 0) {
+      setImportStatus("No rows with an email found.");
+      return;
+    }
+
+    setImportStatus(`Importing ${parsed.length} rows...`);
     try {
-      const buffer = await file.arrayBuffer();
-      const book = XLSX.read(buffer, { type: "array" });
-      const sheet = book.Sheets[book.SheetNames[0]];
-      const rawRows: Record<string, any>[] = XLSX.utils.sheet_to_json(sheet);
-
-      const parsed = rawRows
-        .map((row) => ({
-          name: findField(row, ["name", "full name"]),
-          email: findField(row, ["email", "email address"]),
-          phone: findField(row, ["phone", "phone number"]),
-          message: findField(row, ["message", "notes"]),
-        }))
-        .filter((row) => row.email);
-
-      if (parsed.length === 0) {
-        setImportStatus("No rows with an email column found.");
-        return;
-      }
-
-      setImportStatus(`Importing ${parsed.length} rows...`);
-
       const res = await fetch("/api/crm/import", {
         method: "POST",
         headers: {
@@ -182,10 +218,37 @@ export default function AdminPage() {
       );
       loadSubscribers(password);
     } catch {
+      setImportStatus("Import failed — try again.");
+    }
+  };
+
+  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImportStatus("Reading file...");
+    try {
+      const buffer = await file.arrayBuffer();
+      const book = XLSX.read(buffer, { type: "array" });
+      const sheet = book.Sheets[book.SheetNames[0]];
+      const rawRows: Record<string, any>[] = XLSX.utils.sheet_to_json(sheet);
+      await importRows(rawRows);
+    } catch {
       setImportStatus("Import failed — check the file format and try again.");
     } finally {
       e.target.value = "";
     }
+  };
+
+  const handlePasteImport = async () => {
+    const rawRows = parsePastedContacts(pasteText);
+    if (rawRows.length === 0) {
+      setImportStatus("Nothing to import — paste some contacts first.");
+      return;
+    }
+    await importRows(rawRows);
+    setPasteText("");
+    setShowPaste(false);
   };
 
   if (!authed) {
@@ -237,12 +300,15 @@ export default function AdminPage() {
         </div>
 
         <div className="flex flex-wrap gap-3 mb-6">
-          <button onClick={handleExportCsv} className="btn btn-outline btn-sm" disabled={!subscribers.length}>
-            Export CSV
-          </button>
-          <button onClick={handleExportXlsx} className="btn btn-outline btn-sm" disabled={!subscribers.length}>
-            Export XLSX
-          </button>
+          <div className="dropdown">
+            <label tabIndex={0} className={`btn btn-outline btn-sm ${!subscribers.length ? "btn-disabled" : ""}`}>
+              Export ▾
+            </label>
+            <ul tabIndex={0} className="dropdown-content menu menu-sm bg-base-100 border border-base-300 rounded-lg shadow-md w-40 z-10 p-1">
+              <li><a onClick={handleExportCsv}>Export as CSV</a></li>
+              <li><a onClick={handleExportXlsx}>Export as XLSX</a></li>
+            </ul>
+          </div>
           <button onClick={handleCopy} className="btn btn-outline btn-sm" disabled={!subscribers.length}>
             {copyLabel}
           </button>
@@ -256,10 +322,43 @@ export default function AdminPage() {
             className="hidden"
             onChange={handleImportFile}
           />
+          <button onClick={() => setShowPaste((v) => !v)} className="btn btn-primary btn-outline btn-sm">
+            Paste Contacts
+          </button>
           <button onClick={() => loadSubscribers(password)} className="btn btn-ghost btn-sm">
             Refresh
           </button>
         </div>
+
+        {showPaste && (
+          <div className="mb-6 rounded-lg border border-base-300 p-4">
+            <p className="text-sm text-base-content/60 mb-2">
+              Paste contacts from a spreadsheet or a plain list — one per line. Works with or
+              without a header row (Name, Email, Phone, Message).
+            </p>
+            <textarea
+              value={pasteText}
+              onChange={(e) => setPasteText(e.target.value)}
+              placeholder={"Name\tEmail\tPhone\nJane Doe\tjane@example.com\t305-555-0100"}
+              rows={6}
+              className="textarea textarea-bordered w-full font-mono text-xs"
+            />
+            <div className="flex gap-3 mt-3">
+              <button onClick={handlePasteImport} className="btn btn-primary btn-sm" disabled={!pasteText.trim()}>
+                Import Pasted Contacts
+              </button>
+              <button
+                onClick={() => {
+                  setShowPaste(false);
+                  setPasteText("");
+                }}
+                className="btn btn-ghost btn-sm"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
 
         {importStatus && (
           <p className="text-sm text-base-content/70 mb-4">{importStatus}</p>
@@ -276,7 +375,6 @@ export default function AdminPage() {
                   <th>Name</th>
                   <th>Email</th>
                   <th>Phone</th>
-                  <th>Message</th>
                   <th>Source</th>
                   <th>Signed Up</th>
                 </tr>
@@ -287,7 +385,6 @@ export default function AdminPage() {
                     <td>{s.name || "—"}</td>
                     <td>{s.email}</td>
                     <td>{s.phone || "—"}</td>
-                    <td className="max-w-xs truncate">{s.message || "—"}</td>
                     <td>
                       <span className="badge badge-sm">{s.source}</span>
                     </td>
@@ -296,7 +393,7 @@ export default function AdminPage() {
                 ))}
                 {subscribers.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="text-center text-base-content/50 py-8">
+                    <td colSpan={5} className="text-center text-base-content/50 py-8">
                       No subscribers yet.
                     </td>
                   </tr>

@@ -10,7 +10,13 @@ const config = {
   appName: "Pretty Kitty Miami-Dade Rescue",
   appDescription:
     "Pretty Kitty Miami-Dade Rescue — a 501(c)(3) nonprofit rescuing, rehabilitating, and rehoming community cats and kittens in Miami-Dade County since 2015.",
-  domainName: "prettykittymiamirescue.org",
+  // Using "www." here (not the bare apex) because the apex domain's DNS at
+  // the registrar still has stale parking-page A records mixed in with the
+  // correct Vercel one — intermittently serving GoDaddy's placeholder page
+  // instead of the site. "www." is fully and reliably pointed at Vercel, so
+  // every canonical/OG/sitemap URL generated from this uses it instead.
+  // Safe to revert to the bare apex once the DNS records are cleaned up.
+  domainName: "www.prettykittymiamirescue.org",
 
   // Unique identifier sent to the Enigma CRM backend so every submission from
   // this site is scoped to this client. Must be unique per client site.

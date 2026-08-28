@@ -27,6 +27,8 @@ export default function ContactForm() {
           clientWebsite: config.domainName,
           clientInstagram: config.instagramUrl,
           clientGoogleBusinessUrl: config.googleBusinessUrl,
+          clientDonateUrl: `https://${config.domainName}/donate`,
+          clientGetInvolvedUrl: `https://${config.domainName}/get-involved`,
           name: data.get("name"),
           email: data.get("email"),
           phone: data.get("phone"),
