@@ -29,17 +29,9 @@ rebuilt on the same Enigma Labs client-site template used for
    adjust as needed:
 
    ```
-   NEXT_PUBLIC_ENIGMA_API_URL=http://localhost:5001
-   NEXT_PUBLIC_ADMIN_PASSWORD=pw
+   NEXT_PUBLIC_ENIGMA_API_URL=
+   NEXT_PUBLIC_ADMIN_PASSWORD=
    ```
-
-   `NEXT_PUBLIC_ENIGMA_API_URL` must point at a running `enigma-node-server`
-   instance. To run it locally:
-
-   ```bash
-   cd ../enigma-node-server-main
-   npm install
-   npm run server   # nodemon index.js, defaults to port 5001
    ```
 
 3. **Run the dev server**

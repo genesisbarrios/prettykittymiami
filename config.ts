@@ -66,7 +66,7 @@ const config = {
 
   crm: {
     apiUrl:
-      process.env.NEXT_PUBLIC_ENIGMA_API_URL || "http://localhost:5000",
+      process.env.ENIGMA_API_URL || "http://localhost:5000",
   },
 } as ConfigProps;
 
