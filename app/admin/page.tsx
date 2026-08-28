@@ -14,8 +14,10 @@ interface Subscriber {
   createdAt: string;
 }
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "pw";
-const SESSION_KEY = "prettykitty_admin_authed";
+// No password constant here on purpose — the real password only lives
+// server-side (see app/api/crm/subscribers/route.ts). The browser only ever
+// knows whatever the admin just typed, submitted to the server to check.
+const SESSION_KEY = "prettykitty_admin_password";
 
 function downloadBlob(content: BlobPart, filename: string, type: string) {
   const blob = new Blob([content], { type });
@@ -62,19 +64,20 @@ export default function AdminPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (sessionStorage.getItem(SESSION_KEY) === "1") {
+    const saved = sessionStorage.getItem(SESSION_KEY);
+    if (saved) {
+      setPassword(saved);
       setAuthed(true);
     }
   }, []);
 
-  const loadSubscribers = async () => {
+  const loadSubscribers = async (pw: string) => {
     setLoading(true);
     setLoadError("");
     try {
-      const res = await fetch(
-        `${config.crm.apiUrl}/api/crm/clients/${config.clientSlug}/subscribers`,
-        { headers: { "x-admin-password": ADMIN_PASSWORD } }
-      );
+      const res = await fetch("/api/crm/subscribers", {
+        headers: { "x-admin-password": pw },
+      });
       if (!res.ok) throw new Error("Failed to load subscribers");
       const json = await res.json();
       setSubscribers(json.subscribers || []);
@@ -86,14 +89,17 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
-    if (authed) loadSubscribers();
+    if (authed) loadSubscribers(password);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authed]);
 
-  const handlePasswordSubmit = (e: React.FormEvent) => {
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === ADMIN_PASSWORD) {
-      sessionStorage.setItem(SESSION_KEY, "1");
+    const res = await fetch("/api/crm/subscribers", {
+      headers: { "x-admin-password": password },
+    });
+    if (res.ok) {
+      sessionStorage.setItem(SESSION_KEY, password);
       setAuthed(true);
       setAuthError("");
     } else {
@@ -154,28 +160,25 @@ export default function AdminPage() {
 
       setImportStatus(`Importing ${parsed.length} rows...`);
 
-      const res = await fetch(
-        `${config.crm.apiUrl}/api/crm/subscribers/import`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-admin-password": ADMIN_PASSWORD,
-          },
-          body: JSON.stringify({
-            clientSlug: config.clientSlug,
-            clientName: config.appName,
-            subscribers: parsed,
-          }),
-        }
-      );
+      const res = await fetch("/api/crm/import", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-password": password,
+        },
+        body: JSON.stringify({
+          clientSlug: config.clientSlug,
+          clientName: config.appName,
+          subscribers: parsed,
+        }),
+      });
 
       if (!res.ok) throw new Error("Import failed");
       const json = await res.json();
       setImportStatus(
         `Imported ${json.insertedCount}, skipped ${json.skippedCount} duplicate(s).`
       );
-      loadSubscribers();
+      loadSubscribers(password);
     } catch {
       setImportStatus("Import failed — check the file format and try again.");
     } finally {
@@ -251,7 +254,7 @@ export default function AdminPage() {
             className="hidden"
             onChange={handleImportFile}
           />
-          <button onClick={loadSubscribers} className="btn btn-ghost btn-sm">
+          <button onClick={() => loadSubscribers(password)} className="btn btn-ghost btn-sm">
             Refresh
           </button>
         </div>

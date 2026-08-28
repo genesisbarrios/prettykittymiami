@@ -15,6 +15,11 @@ export const metadata = getSEOTags({
 // Real photos pulled from the rescue's website. Add more to this array
 // (and the /public/images/gallery folder) as new cats are rescued.
 const photos = [
+  "/images/gallery/tuxcat.jpg",
+  "/images/gallery/siamesecat.JPG",
+  "/images/gallery/sinkcat.jpg",
+  "/images/gallery/kitten.jpg",
+  "/images/gallery/kittens.jpg",
   "/images/gallery/post-1.jpg",
   "/images/gallery/post-2.jpg",
   "/images/gallery/post-3.jpg",

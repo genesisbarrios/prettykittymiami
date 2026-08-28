@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Script from "next/script";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import NewsletterForm from "@/components/NewsletterForm";
@@ -111,6 +112,34 @@ export default function AboutPage() {
                 successMessage="You're in — thank you for supporting our cats."
               />
             </div>
+          </div>
+
+          <div className="mt-12">
+            <div className="text-center mb-10">
+              <h2 className="font-display text-3xl tracking-wide">
+                DONATE
+              </h2>
+              <p className="text-base-content/60 mt-2">
+                Every dollar goes toward food, litter, medicine, and vet
+                care.
+              </p>
+            </div>
+            <Script
+              src="https://donorbox.org/widget.js"
+              strategy="afterInteractive"
+              {...{ paypalExpress: "false" }}
+            />
+            <iframe
+              src="https://donorbox.org/embed/generic-donation-4?default_interval=m&show_content=true&enable_auto_scroll=false"
+              name="donorbox"
+              seamless
+              frameBorder="0"
+              scrolling="no"
+              height="900px"
+              width="100%"
+              style={{ maxWidth: "100%", minWidth: "100%", maxHeight: "none" }}
+              {...{ allowpaymentrequest: "true" }}
+            />
           </div>
         </section>
       </main>

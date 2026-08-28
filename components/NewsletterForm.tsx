@@ -12,10 +12,14 @@ export default function NewsletterForm({
   className = "",
   buttonLabel = "Get Discounts",
   successMessage = "You're in — watch your inbox for discounts.",
+  buttonClassName = "btn-primary",
 }: {
   className?: string;
   buttonLabel?: string;
   successMessage?: string;
+  // Override when this form sits on a bg-primary section — "btn-primary"
+  // would otherwise blend into the background.
+  buttonClassName?: string;
 }) {
   const [status, setStatus] = useState<Status>("idle");
 
@@ -27,7 +31,7 @@ export default function NewsletterForm({
     const data = new FormData(form);
 
     try {
-      const res = await fetch(`${config.crm.apiUrl}/api/crm/contact`, {
+      const res = await fetch("/api/crm/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -86,7 +90,7 @@ export default function NewsletterForm({
         <button
           type="submit"
           disabled={status === "loading"}
-          className="btn btn-primary shrink-0"
+          className={`btn ${buttonClassName} shrink-0`}
         >
           {status === "loading" ? "Joining..." : buttonLabel}
         </button>

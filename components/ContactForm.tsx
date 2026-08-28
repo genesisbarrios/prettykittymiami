@@ -16,7 +16,7 @@ export default function ContactForm() {
     const data = new FormData(form);
 
     try {
-      const res = await fetch(`${config.crm.apiUrl}/api/crm/contact`, {
+      const res = await fetch("/api/crm/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -198,12 +198,12 @@ export default function Home() {
         </section>
 
         {/* Newsletter */}
-        <section className="bg-neutral border-y border-base-300">
+        <section className="bg-primary text-primary-content">
           <div className="max-w-6xl mx-auto px-6 py-20 text-center">
             <h2 className="font-display text-3xl tracking-wide">
               STAY IN THE LOOP
             </h2>
-            <p className="text-base-content/60 mt-2 max-w-md mx-auto">
+            <p className="text-primary-content/80 mt-2 max-w-md mx-auto">
               Join our list for rescue updates, adoption alerts, and ways
               to help.
             </p>
@@ -211,19 +211,8 @@ export default function Home() {
               <NewsletterForm
                 buttonLabel="Sign Up"
                 successMessage="You're in — thank you for supporting our cats."
+                buttonClassName="btn-neutral"
               />
-            </div>
-          </div>
-        </section>
-
-        {/* Final CTA */}
-        <section className="bg-primary text-primary-content">
-          <div className="max-w-6xl mx-auto px-6 py-16 text-center">
-            <h2 className="font-display text-3xl md:text-4xl tracking-wide">
-              EVERY DOLLAR HELPS A CAT IN NEED.
-            </h2>
-            <div className="mt-6">
-              <PrimaryCta className="btn btn-neutral btn-lg" />
             </div>
           </div>
         </section>

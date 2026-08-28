@@ -4,7 +4,6 @@ import Script from "next/script";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import PageBanner from "@/components/PageBanner";
-import PrimaryCta from "@/components/PrimaryCta";
 import config from "@/config";
 import { getInvolvedOptions } from "@/data/get-involved";
 import { getSEOTags } from "@/libs/seo";
@@ -75,10 +74,6 @@ export default function GetInvolvedPage() {
                 </Link>
               );
             })}
-          </div>
-
-          <div className="text-center mt-12">
-            <PrimaryCta className="btn btn-primary btn-lg" />
           </div>
         </section>
 
