@@ -128,6 +128,34 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Founder */}
+        <section className="bg-primary/10">
+          <div className="max-w-4xl mx-auto px-6 py-16 flex flex-col sm:flex-row items-center gap-8">
+            <div className="relative w-32 h-32 sm:w-40 sm:h-40 shrink-0 rounded-full overflow-hidden border-4 border-white shadow-md">
+              <Image
+                src="/founder.jpg"
+                alt="Pretty Kitty Miami-Dade Rescue founder"
+                fill
+                sizes="160px"
+                className="object-cover"
+              />
+            </div>
+            <blockquote className="text-base-content/80 italic leading-relaxed text-center sm:text-left">
+              &ldquo;I help cats and the people who love them. Since 2015,
+              I&apos;ve dedicated myself to rescuing and rehabilitating
+              Miami&apos;s community cats running an active TNR program,
+              providing hands-on medical care and fostering, and
+              coordinating adoption transport to loving homes across the
+              northeastern U.S. I couldn&apos;t do this work without the
+              community of adopters, fosters, and supporters who make it
+              possible.&rdquo;
+              <footer className="mt-3 text-sm not-italic text-base-content/60">
+                — Deb Pachano, PKMDR Founder
+              </footer>
+            </blockquote>
+          </div>
+        </section>
+
         {/* Recent rescues */}
         <section className="max-w-6xl mx-auto px-6 py-20">
           <div className="text-center mb-12">
