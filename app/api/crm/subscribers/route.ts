@@ -25,3 +25,28 @@ export async function GET(req: NextRequest) {
   const data = await res.json();
   return NextResponse.json(data, { status: res.status });
 }
+
+// Backs the admin "+ Add Contact" button — a single manual add.
+export async function POST(req: NextRequest) {
+  const password = req.headers.get("x-admin-password");
+  if (password !== ADMIN_PASSWORD) {
+    return NextResponse.json(
+      { ok: false, message: "Invalid admin password." },
+      { status: 401 }
+    );
+  }
+
+  const body = await req.json();
+
+  const res = await fetch(`${ENIGMA_API_URL}/api/crm/subscribers`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-admin-password": ADMIN_PASSWORD,
+    },
+    body: JSON.stringify({ ...body, clientSlug: config.clientSlug }),
+  });
+
+  const data = await res.json();
+  return NextResponse.json(data, { status: res.status });
+}

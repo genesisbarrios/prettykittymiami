@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as XLSX from "xlsx";
 import config from "@/config";
 
@@ -39,6 +39,23 @@ interface Campaign {
 // server-side (see app/api/crm/subscribers/route.ts). The browser only ever
 // knows whatever the admin just typed, submitted to the server to check.
 const SESSION_KEY = "prettykitty_admin_password";
+
+const PencilIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6.75l1.5 1.5" />
+  </svg>
+);
+
+const TrashIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4">
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+    />
+  </svg>
+);
 
 function downloadBlob(content: BlobPart, filename: string, type: string) {
   const blob = new Blob([content], { type });
@@ -220,11 +237,18 @@ export default function AdminPage() {
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState("");
 
+  const [showAddContact, setShowAddContact] = useState(false);
+  const [addContactForm, setAddContactForm] = useState<Partial<Subscriber>>({});
+  const [addContactSaving, setAddContactSaving] = useState(false);
+  const [addContactError, setAddContactError] = useState("");
+
   const [viewingMessage, setViewingMessage] = useState<Subscriber | null>(null);
 
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loadingCampaigns, setLoadingCampaigns] = useState(false);
   const [viewingCampaign, setViewingCampaign] = useState<Campaign | null>(null);
+  const [campaignSearch, setCampaignSearch] = useState("");
+  const [campaignTypeFilter, setCampaignTypeFilter] = useState("all");
 
   const [showComposer, setShowComposer] = useState(false);
   const [composerTemplateKey, setComposerTemplateKey] = useState("custom");
@@ -489,6 +513,60 @@ export default function AdminPage() {
     }
   };
 
+  // ── Add contact ──────────────────────────────────────────────────────
+
+  const openAddContact = () => {
+    setAddContactForm({ source: "contact_form" });
+    setAddContactError("");
+    setShowAddContact(true);
+  };
+
+  const closeAddContact = () => {
+    setShowAddContact(false);
+    setAddContactForm({});
+    setAddContactError("");
+  };
+
+  const handleAddContactSave = async () => {
+    if (!addContactForm.email?.trim()) {
+      setAddContactError("Email is required.");
+      return;
+    }
+    setAddContactSaving(true);
+    setAddContactError("");
+    try {
+      const res = await fetch("/api/crm/subscribers", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-password": password,
+        },
+        body: JSON.stringify({
+          name: addContactForm.name || "",
+          email: addContactForm.email || "",
+          phone: addContactForm.phone || "",
+          message: addContactForm.message || "",
+          source: addContactForm.source || "contact_form",
+          interestedAdopting: Boolean(addContactForm.interestedAdopting),
+          interestedFostering: Boolean(addContactForm.interestedFostering),
+          interestedVolunteering: Boolean(addContactForm.interestedVolunteering),
+        }),
+      });
+      if (!res.ok) throw new Error("Save failed");
+      const json = await res.json();
+      if (json.duplicate) {
+        setAddContactError(json.message || "A contact with this email already exists.");
+        return;
+      }
+      setSubscribers((prev) => [json.subscriber, ...prev]);
+      closeAddContact();
+    } catch {
+      setAddContactError("Could not add this contact — try again.");
+    } finally {
+      setAddContactSaving(false);
+    }
+  };
+
   // ── Campaign composer ────────────────────────────────────────────────
 
   const openComposer = (templateKey: string, presetSelectedIds?: string[]) => {
@@ -599,6 +677,34 @@ export default function AdminPage() {
     }
   };
 
+  const filteredCampaigns = useMemo(() => {
+    const q = campaignSearch.trim().toLowerCase();
+    return campaigns.filter((c) => {
+      const matchesQuery = !q || c.subject.toLowerCase().includes(q);
+      const matchesType = campaignTypeFilter === "all" || c.templateKey === campaignTypeFilter;
+      return matchesQuery && matchesType;
+    });
+  }, [campaigns, campaignSearch, campaignTypeFilter]);
+
+  // Kept minimal on purpose — everything here is derived from the
+  // CrmCampaign records already loaded above, so there's no need for a
+  // separate analytics table. Grouped by template type since that's what
+  // she actually wants to compare (adopting vs fostering vs volunteering...).
+  const campaignAnalytics = useMemo(() => {
+    const byType = new Map<string, { label: string; campaignCount: number; recipientCount: number; deliveredCount: number; failedCount: number }>();
+    campaigns.forEach((c) => {
+      const key = c.templateKey || "custom";
+      const label = TEMPLATE_PRESETS[key]?.label || (key === "reply" ? "Reply" : "Custom");
+      const entry = byType.get(key) || { label, campaignCount: 0, recipientCount: 0, deliveredCount: 0, failedCount: 0 };
+      entry.campaignCount += 1;
+      entry.recipientCount += c.recipients.length;
+      entry.deliveredCount += c.recipients.filter((r) => !r.error).length;
+      entry.failedCount += c.recipients.filter((r) => r.error).length;
+      byType.set(key, entry);
+    });
+    return Array.from(byType.entries()).map(([key, stats]) => ({ key, ...stats }));
+  }, [campaigns]);
+
   if (!authed) {
     return (
       <div
@@ -650,19 +756,10 @@ export default function AdminPage() {
         </div>
 
         <div className="flex flex-wrap gap-3 mb-6">
-          <div className="dropdown">
-            <label tabIndex={0} className={`btn btn-outline btn-sm ${!subscribers.length ? "btn-disabled" : ""}`}>
-              Export ▾
-            </label>
-            <ul tabIndex={0} className="dropdown-content menu menu-sm bg-base-100 border border-base-300 rounded-lg shadow-md w-40 z-10 p-1">
-              <li><a onClick={handleExportCsv}>Export as CSV</a></li>
-              <li><a onClick={handleExportXlsx}>Export as XLSX</a></li>
-            </ul>
-          </div>
-          <button onClick={handleCopy} className="btn btn-outline btn-sm" disabled={!subscribers.length}>
-            {copyLabel}
+          <button onClick={openAddContact} className="btn btn-primary btn-sm">
+            + Add Contact
           </button>
-          <button onClick={handleImportClick} className="btn btn-primary btn-sm">
+          <button onClick={handleImportClick} className="btn btn-primary btn-outline btn-sm">
             Import CSV/XLSX
           </button>
           <input
@@ -674,6 +771,18 @@ export default function AdminPage() {
           />
           <button onClick={() => setShowPaste((v) => !v)} className="btn btn-primary btn-outline btn-sm">
             Paste Contacts
+          </button>
+          <div className="dropdown">
+            <label tabIndex={0} className={`btn btn-outline btn-sm ${!subscribers.length ? "btn-disabled" : ""}`}>
+              Export ▾
+            </label>
+            <ul tabIndex={0} className="dropdown-content menu menu-sm bg-base-100 border border-base-300 rounded-lg shadow-md w-40 z-10 p-1">
+              <li><a onClick={handleExportCsv}>Export as CSV</a></li>
+              <li><a onClick={handleExportXlsx}>Export as XLSX</a></li>
+            </ul>
+          </div>
+          <button onClick={handleCopy} className="btn btn-outline btn-sm" disabled={!subscribers.length}>
+            {copyLabel}
           </button>
           <button onClick={() => loadSubscribers(password)} className="btn btn-ghost btn-sm">
             Refresh
@@ -737,11 +846,11 @@ export default function AdminPage() {
                   <tr key={s._id}>
                     <td>
                       <div className="flex gap-2">
-                        <button onClick={() => openEdit(s)} className="btn btn-ghost btn-xs">
-                          Edit
+                        <button onClick={() => openEdit(s)} className="btn btn-ghost btn-xs" title="Edit" aria-label="Edit">
+                          <PencilIcon />
                         </button>
-                        <button onClick={() => handleDelete(s)} className="btn btn-ghost btn-xs text-error">
-                          Delete
+                        <button onClick={() => handleDelete(s)} className="btn btn-ghost btn-xs text-error" title="Delete" aria-label="Delete">
+                          <TrashIcon />
                         </button>
                       </div>
                     </td>
@@ -830,23 +939,33 @@ export default function AdminPage() {
           </div>
         )}
 
-        <div className="flex flex-wrap gap-2 mb-6">
-          {Object.entries(TEMPLATE_PRESETS)
-            .filter(([key]) => key !== "custom")
-            .map(([key, preset]) => (
-              <button
-                key={key}
-                onClick={() => openComposer(key)}
-                className="btn btn-outline btn-sm"
-              >
-                {preset.label} Template
-              </button>
-            ))}
+        <div className="flex flex-wrap gap-3 mb-6">
+          <input
+            type="text"
+            placeholder="Search by subject..."
+            value={campaignSearch}
+            onChange={(e) => setCampaignSearch(e.target.value)}
+            className="input input-bordered input-sm w-full max-w-xs"
+          />
+          <select
+            value={campaignTypeFilter}
+            onChange={(e) => setCampaignTypeFilter(e.target.value)}
+            className="select select-bordered select-sm"
+          >
+            <option value="all">All Types</option>
+            {Object.entries(TEMPLATE_PRESETS)
+              .filter(([key]) => key !== "custom")
+              .map(([key, preset]) => (
+                <option key={key} value={key}>{preset.label}</option>
+              ))}
+            <option value="reply">Reply</option>
+            <option value="custom">Custom</option>
+          </select>
         </div>
 
         {loadingCampaigns && <p className="text-base-content/60">Loading campaigns...</p>}
 
-        <div className="overflow-x-auto border border-base-300 rounded-lg">
+        <div className="overflow-x-auto border border-base-300 rounded-lg mb-16">
           <table className="table">
             <thead>
               <tr>
@@ -858,7 +977,7 @@ export default function AdminPage() {
               </tr>
             </thead>
             <tbody>
-              {campaigns.map((c) => (
+              {filteredCampaigns.map((c) => (
                 <tr key={c._id}>
                   <td>{c.subject}</td>
                   <td>
@@ -875,16 +994,52 @@ export default function AdminPage() {
                   </td>
                 </tr>
               ))}
-              {!loadingCampaigns && campaigns.length === 0 && (
+              {!loadingCampaigns && filteredCampaigns.length === 0 && (
                 <tr>
                   <td colSpan={5} className="text-center text-base-content/50 py-8">
-                    No campaigns sent yet.
+                    {campaigns.length === 0 ? "No campaigns sent yet." : "No campaigns match your filters."}
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
+
+        {/* ── OUTREACH ANALYTICS ─────────────────────────────────────── */}
+        <h2 className="font-display text-2xl tracking-wide mb-4">OUTREACH ANALYTICS</h2>
+        {campaignAnalytics.length === 0 ? (
+          <p className="text-base-content/50 mb-4">Nothing sent yet — analytics will show up here once you send a campaign.</p>
+        ) : (
+          <div className="overflow-x-auto border border-base-300 rounded-lg">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Campaign Type</th>
+                  <th>Campaigns Sent</th>
+                  <th>Total Recipients</th>
+                  <th>Delivered</th>
+                  <th>Failed</th>
+                </tr>
+              </thead>
+              <tbody>
+                {campaignAnalytics.map((stat) => (
+                  <tr key={stat.key}>
+                    <td>{stat.label}</td>
+                    <td>{stat.campaignCount}</td>
+                    <td>{stat.recipientCount}</td>
+                    <td className="text-success">
+                      {stat.deliveredCount}
+                      {stat.recipientCount > 0 && (
+                        <span className="text-base-content/50"> ({Math.round((stat.deliveredCount / stat.recipientCount) * 100)}%)</span>
+                      )}
+                    </td>
+                    <td className={stat.failedCount > 0 ? "text-error" : "text-base-content/50"}>{stat.failedCount}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* ── Edit subscriber modal ──────────────────────────────────── */}
@@ -971,6 +1126,94 @@ export default function AdminPage() {
             </div>
           </div>
           <div className="modal-backdrop" onClick={closeEdit} />
+        </div>
+      )}
+
+      {/* ── Add contact modal ──────────────────────────────────────── */}
+      {showAddContact && (
+        <div className="modal modal-open">
+          <div className="modal-box max-w-lg">
+            <h3 className="font-display text-xl tracking-wide mb-4">Add Contact</h3>
+            <div className="flex flex-col gap-3">
+              <input
+                type="text"
+                placeholder="Name"
+                value={addContactForm.name || ""}
+                onChange={(e) => setAddContactForm((f) => ({ ...f, name: e.target.value }))}
+                className="input input-bordered w-full"
+              />
+              <input
+                type="email"
+                placeholder="Email"
+                value={addContactForm.email || ""}
+                onChange={(e) => setAddContactForm((f) => ({ ...f, email: e.target.value }))}
+                className="input input-bordered w-full"
+                autoFocus
+              />
+              <input
+                type="tel"
+                placeholder="Phone"
+                value={addContactForm.phone || ""}
+                onChange={(e) => setAddContactForm((f) => ({ ...f, phone: e.target.value }))}
+                className="input input-bordered w-full"
+              />
+              <select
+                value={addContactForm.source || "contact_form"}
+                onChange={(e) => setAddContactForm((f) => ({ ...f, source: e.target.value }))}
+                className="select select-bordered w-full"
+              >
+                <option value="contact_form">Contact Form</option>
+                <option value="newsletter">Newsletter</option>
+                <option value="import">Imported</option>
+              </select>
+              <textarea
+                placeholder="Message (optional)"
+                value={addContactForm.message || ""}
+                onChange={(e) => setAddContactForm((f) => ({ ...f, message: e.target.value }))}
+                rows={4}
+                className="textarea textarea-bordered w-full"
+              />
+              <div className="flex flex-wrap gap-x-6 gap-y-2">
+                <label className="label cursor-pointer gap-2 justify-start p-0">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(addContactForm.interestedAdopting)}
+                    onChange={(e) => setAddContactForm((f) => ({ ...f, interestedAdopting: e.target.checked }))}
+                    className="checkbox checkbox-primary checkbox-sm"
+                  />
+                  <span className="label-text">Adopting</span>
+                </label>
+                <label className="label cursor-pointer gap-2 justify-start p-0">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(addContactForm.interestedFostering)}
+                    onChange={(e) => setAddContactForm((f) => ({ ...f, interestedFostering: e.target.checked }))}
+                    className="checkbox checkbox-primary checkbox-sm"
+                  />
+                  <span className="label-text">Fostering</span>
+                </label>
+                <label className="label cursor-pointer gap-2 justify-start p-0">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(addContactForm.interestedVolunteering)}
+                    onChange={(e) => setAddContactForm((f) => ({ ...f, interestedVolunteering: e.target.checked }))}
+                    className="checkbox checkbox-primary checkbox-sm"
+                  />
+                  <span className="label-text">Volunteering</span>
+                </label>
+              </div>
+              {addContactError && <p className="text-error text-sm">{addContactError}</p>}
+            </div>
+            <div className="modal-action">
+              <button onClick={closeAddContact} className="btn btn-ghost" disabled={addContactSaving}>
+                Cancel
+              </button>
+              <button onClick={handleAddContactSave} className="btn btn-primary" disabled={addContactSaving}>
+                {addContactSaving ? "Saving..." : "Add Contact"}
+              </button>
+            </div>
+          </div>
+          <div className="modal-backdrop" onClick={closeAddContact} />
         </div>
       )}
 
