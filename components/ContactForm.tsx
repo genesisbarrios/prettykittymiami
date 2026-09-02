@@ -34,6 +34,9 @@ export default function ContactForm() {
           phone: data.get("phone"),
           message: data.get("message"),
           source: "contact_form",
+          interestedAdopting: data.get("interestedAdopting") === "on",
+          interestedFostering: data.get("interestedFostering") === "on",
+          interestedVolunteering: data.get("interestedVolunteering") === "on",
         }),
       });
 
@@ -81,9 +84,23 @@ export default function ContactForm() {
         required
         className="input input-bordered w-full"
       />
+      <div className="flex flex-wrap gap-x-6 gap-y-2">
+        <label className="label cursor-pointer gap-2 justify-start p-0">
+          <input type="checkbox" name="interestedAdopting" className="checkbox checkbox-primary checkbox-sm" />
+          <span className="label-text">Interested in adopting</span>
+        </label>
+        <label className="label cursor-pointer gap-2 justify-start p-0">
+          <input type="checkbox" name="interestedFostering" className="checkbox checkbox-primary checkbox-sm" />
+          <span className="label-text">Interested in fostering</span>
+        </label>
+        <label className="label cursor-pointer gap-2 justify-start p-0">
+          <input type="checkbox" name="interestedVolunteering" className="checkbox checkbox-primary checkbox-sm" />
+          <span className="label-text">Interested in volunteering</span>
+        </label>
+      </div>
       <textarea
         name="message"
-        placeholder="Interested in adopting, fostering, or volunteering? Tell us more."
+        placeholder="Tell us more about yourself and your interest."
         rows={4}
         className="textarea textarea-bordered w-full"
       />
