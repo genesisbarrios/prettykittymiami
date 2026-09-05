@@ -7,6 +7,10 @@ type Status = "idle" | "loading" | "success" | "error";
 
 export default function ContactForm() {
   const [status, setStatus] = useState<Status>("idle");
+  // Honeypot — real users never see or fill this; bots that auto-fill every
+  // input on the page do. Combined with formLoadedAt (a timing trap: humans
+  // take at least a few seconds to fill the form) on the backend.
+  const [formLoadedAt] = useState(() => Date.now());
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -37,6 +41,10 @@ export default function ContactForm() {
           interestedAdopting: data.get("interestedAdopting") === "on",
           interestedFostering: data.get("interestedFostering") === "on",
           interestedVolunteering: data.get("interestedVolunteering") === "on",
+          interestedTNR: data.get("interestedTNR") === "on",
+          interestedStrays: data.get("interestedStrays") === "on",
+          website: data.get("website"),
+          formLoadedAt,
         }),
       });
 
@@ -62,6 +70,15 @@ export default function ContactForm() {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      {/* Honeypot — hidden from real users, tempting for bots that auto-fill every field */}
+      <input
+        type="text"
+        name="website"
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        style={{ position: "absolute", left: "-9999px", width: "1px", height: "1px", opacity: 0 }}
+      />
       <div className="grid sm:grid-cols-2 gap-4">
         <input
           type="text"
@@ -96,6 +113,14 @@ export default function ContactForm() {
         <label className="label cursor-pointer gap-2 justify-start p-0">
           <input type="checkbox" name="interestedVolunteering" className="checkbox checkbox-primary checkbox-sm" />
           <span className="label-text">Interested in volunteering</span>
+        </label>
+        <label className="label cursor-pointer gap-2 justify-start p-0">
+          <input type="checkbox" name="interestedTNR" className="checkbox checkbox-primary checkbox-sm" />
+          <span className="label-text">Need help with TNR</span>
+        </label>
+        <label className="label cursor-pointer gap-2 justify-start p-0">
+          <input type="checkbox" name="interestedStrays" className="checkbox checkbox-primary checkbox-sm" />
+          <span className="label-text">Need help with strays</span>
         </label>
       </div>
       <textarea

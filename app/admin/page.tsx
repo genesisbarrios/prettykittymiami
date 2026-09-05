@@ -14,8 +14,21 @@ interface Subscriber {
   interestedAdopting?: boolean;
   interestedFostering?: boolean;
   interestedVolunteering?: boolean;
+  interestedTNR?: boolean;
+  interestedStrays?: boolean;
   createdAt: string;
 }
+
+// Interest checkboxes available for this client, used to build the
+// "By interest" campaign-recipient filter below — keep in sync with the
+// checkboxes on the public ContactForm and the CrmSubscriber schema fields.
+const INTEREST_FIELDS: { key: keyof Subscriber; label: string }[] = [
+  { key: "interestedAdopting", label: "Adopting" },
+  { key: "interestedFostering", label: "Fostering" },
+  { key: "interestedVolunteering", label: "Volunteering" },
+  { key: "interestedTNR", label: "TNR" },
+  { key: "interestedStrays", label: "Strays" },
+];
 
 interface CampaignRecipient {
   subscriberId: string;
@@ -79,6 +92,8 @@ function toRows(subscribers: Subscriber[]) {
     Adopting: s.interestedAdopting ? "Yes" : "",
     Fostering: s.interestedFostering ? "Yes" : "",
     Volunteering: s.interestedVolunteering ? "Yes" : "",
+    TNR: s.interestedTNR ? "Yes" : "",
+    Strays: s.interestedStrays ? "Yes" : "",
     "Signed Up": new Date(s.createdAt).toLocaleString(),
   }));
 }
@@ -181,6 +196,16 @@ const TEMPLATE_PRESETS: Record<string, { label: string; subject: string; body: s
     subject: "Let's get you volunteering! 🙌",
     body: "Hi (name),\n\nThank you for wanting to volunteer with Pretty Kitty Miami-Dade Rescue! We always need extra hands and hearts to help care for our animals.\n\nWe'll be in touch soon with our upcoming volunteer opportunities and orientation details. Thanks again for wanting to get involved!",
   },
+  tnr: {
+    label: "TNR",
+    subject: "Let's get that stray trapped, neutered, and returned 🐾",
+    body: "Hi (name),\n\nThank you for reaching out about TNR (Trap-Neuter-Return)! We'd love to help get that stray taken care of.\n\nReply to this email with the stray's general location and any details that'll help (friendly vs. skittish, how many cats, etc.) and we'll follow up with next steps.",
+  },
+  strays: {
+    label: "Strays",
+    subject: "We're on it — thank you for reaching out about the strays 🐾",
+    body: "Hi (name),\n\nThank you for letting us know about the strays! We'd love to help however we can.\n\nReply to this email with a few more details — location, how many cats, and whether they seem friendly or feral — and we'll follow up with next steps.",
+  },
   events: {
     label: "Upcoming Event",
     subject: "Upcoming Pretty Kitty Event! 📅",
@@ -254,9 +279,10 @@ export default function AdminPage() {
   const [composerTemplateKey, setComposerTemplateKey] = useState("custom");
   const [composerSubject, setComposerSubject] = useState("");
   const [composerBody, setComposerBody] = useState("");
-  const [composerMode, setComposerMode] = useState<"select" | "all" | "source">("select");
+  const [composerMode, setComposerMode] = useState<"select" | "all" | "source" | "interest">("select");
   const [composerSourceFilter, setComposerSourceFilter] = useState("contact_form");
   const [composerSelectedIds, setComposerSelectedIds] = useState<Set<string>>(new Set());
+  const [composerInterestKeys, setComposerInterestKeys] = useState<Set<string>>(new Set());
   const [sending, setSending] = useState(false);
   const [sendStatus, setSendStatus] = useState("");
 
@@ -609,10 +635,25 @@ export default function AdminPage() {
     });
   };
 
+  const toggleComposerInterest = (key: string) => {
+    setComposerInterestKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
   const resolveRecipientIds = (): string[] => {
     if (composerMode === "all") return subscribers.map((s) => s._id);
     if (composerMode === "source") {
       return subscribers.filter((s) => s.source === composerSourceFilter).map((s) => s._id);
+    }
+    if (composerMode === "interest") {
+      if (composerInterestKeys.size === 0) return [];
+      return subscribers
+        .filter((s) => Array.from(composerInterestKeys).some((key) => Boolean(s[key as keyof Subscriber])))
+        .map((s) => s._id);
     }
     return Array.from(composerSelectedIds);
   };
@@ -879,7 +920,9 @@ export default function AdminPage() {
                         {s.interestedAdopting && <span className="badge badge-sm badge-primary">Adopting</span>}
                         {s.interestedFostering && <span className="badge badge-sm badge-primary">Fostering</span>}
                         {s.interestedVolunteering && <span className="badge badge-sm badge-primary">Volunteering</span>}
-                        {!s.interestedAdopting && !s.interestedFostering && !s.interestedVolunteering && (
+                        {s.interestedTNR && <span className="badge badge-sm badge-primary">TNR</span>}
+                        {s.interestedStrays && <span className="badge badge-sm badge-primary">Strays</span>}
+                        {!s.interestedAdopting && !s.interestedFostering && !s.interestedVolunteering && !s.interestedTNR && !s.interestedStrays && (
                           <span className="text-base-content/40 text-xs">—</span>
                         )}
                       </div>
@@ -1113,6 +1156,24 @@ export default function AdminPage() {
                   />
                   <span className="label-text">Volunteering</span>
                 </label>
+                <label className="label cursor-pointer gap-2 justify-start p-0">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(editForm.interestedTNR)}
+                    onChange={(e) => setEditForm((f) => ({ ...f, interestedTNR: e.target.checked }))}
+                    className="checkbox checkbox-primary checkbox-sm"
+                  />
+                  <span className="label-text">TNR</span>
+                </label>
+                <label className="label cursor-pointer gap-2 justify-start p-0">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(editForm.interestedStrays)}
+                    onChange={(e) => setEditForm((f) => ({ ...f, interestedStrays: e.target.checked }))}
+                    className="checkbox checkbox-primary checkbox-sm"
+                  />
+                  <span className="label-text">Strays</span>
+                </label>
               </div>
               {editError && <p className="text-error text-sm">{editError}</p>}
             </div>
@@ -1200,6 +1261,24 @@ export default function AdminPage() {
                     className="checkbox checkbox-primary checkbox-sm"
                   />
                   <span className="label-text">Volunteering</span>
+                </label>
+                <label className="label cursor-pointer gap-2 justify-start p-0">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(addContactForm.interestedTNR)}
+                    onChange={(e) => setAddContactForm((f) => ({ ...f, interestedTNR: e.target.checked }))}
+                    className="checkbox checkbox-primary checkbox-sm"
+                  />
+                  <span className="label-text">TNR</span>
+                </label>
+                <label className="label cursor-pointer gap-2 justify-start p-0">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(addContactForm.interestedStrays)}
+                    onChange={(e) => setAddContactForm((f) => ({ ...f, interestedStrays: e.target.checked }))}
+                    className="checkbox checkbox-primary checkbox-sm"
+                  />
+                  <span className="label-text">Strays</span>
                 </label>
               </div>
               {addContactError && <p className="text-error text-sm">{addContactError}</p>}
@@ -1374,7 +1453,33 @@ export default function AdminPage() {
                     </select>
                   )}
                 </label>
+                <label className="label cursor-pointer gap-2 justify-start p-0">
+                  <input
+                    type="radio"
+                    name="composerMode"
+                    checked={composerMode === "interest"}
+                    onChange={() => setComposerMode("interest")}
+                    className="radio radio-primary radio-sm"
+                  />
+                  <span className="label-text">By interest</span>
+                </label>
               </div>
+
+              {composerMode === "interest" && (
+                <div className="flex flex-wrap gap-x-6 gap-y-2 border border-base-300 rounded-lg p-3 mb-3">
+                  {INTEREST_FIELDS.map((field) => (
+                    <label key={field.key} className="label cursor-pointer gap-2 justify-start p-0">
+                      <input
+                        type="checkbox"
+                        checked={composerInterestKeys.has(field.key)}
+                        onChange={() => toggleComposerInterest(field.key)}
+                        className="checkbox checkbox-primary checkbox-sm"
+                      />
+                      <span className="label-text text-sm">{field.label}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
 
               {composerMode === "select" && (
                 <div className="max-h-48 overflow-y-auto border border-base-300 rounded-lg p-2">

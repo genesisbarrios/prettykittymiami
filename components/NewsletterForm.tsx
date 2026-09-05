@@ -22,6 +22,10 @@ export default function NewsletterForm({
   buttonClassName?: string;
 }) {
   const [status, setStatus] = useState<Status>("idle");
+  // Honeypot — real users never see or fill this; bots that auto-fill every
+  // input on the page do. Combined with formLoadedAt (a timing trap: humans
+  // take at least a couple seconds to fill the form) on the backend.
+  const [formLoadedAt] = useState(() => Date.now());
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -45,6 +49,8 @@ export default function NewsletterForm({
           phone: data.get("phone"),
           email: data.get("email"),
           source: "newsletter",
+          website: data.get("website"),
+          formLoadedAt,
         }),
       });
 
@@ -68,6 +74,15 @@ export default function NewsletterForm({
       onSubmit={handleSubmit}
       className={`flex flex-col gap-3 w-full max-w-md ${className}`}
     >
+      {/* Honeypot — hidden from real users, tempting for bots that auto-fill every field */}
+      <input
+        type="text"
+        name="website"
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        style={{ position: "absolute", left: "-9999px", width: "1px", height: "1px", opacity: 0 }}
+      />
       <div className="flex flex-col sm:flex-row gap-3">
         <input
           type="text"
