@@ -289,6 +289,14 @@ export default function AdminPage() {
   const [sendLimit, setSendLimit] = useState<{ limit: number | null; usedToday: number; remaining: number | null } | null>(null);
   const [limitAlert, setLimitAlert] = useState("");
 
+  // ── Bulk selection on the main subscribers table ───────────────────────
+  const [selectedSubscriberIds, setSelectedSubscriberIds] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [showResendCampaign, setShowResendCampaign] = useState(false);
+  const [resendCampaignId, setResendCampaignId] = useState("");
+  const [resendSending, setResendSending] = useState(false);
+  const [resendStatus, setResendStatus] = useState("");
+
   useEffect(() => {
     const saved = sessionStorage.getItem(SESSION_KEY);
     if (saved) {
@@ -534,8 +542,122 @@ export default function AdminPage() {
         next.delete(subscriber._id);
         return next;
       });
+      setSelectedSubscriberIds((prev) => {
+        const next = new Set(prev);
+        next.delete(subscriber._id);
+        return next;
+      });
     } catch {
       window.alert("Could not delete this subscriber — try again.");
+    }
+  };
+
+  // ── Bulk selection / actions on the main table ─────────────────────────
+
+  const toggleSelected = (id: string) => {
+    setSelectedSubscriberIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const allSelected = subscribers.length > 0 && subscribers.every((s) => selectedSubscriberIds.has(s._id));
+
+  const toggleSelectAll = () => {
+    setSelectedSubscriberIds(allSelected ? new Set() : new Set(subscribers.map((s) => s._id)));
+  };
+
+  const clearSelection = () => setSelectedSubscriberIds(new Set());
+
+  const handleBulkDelete = async () => {
+    const ids = Array.from(selectedSubscriberIds);
+    if (ids.length === 0) return;
+    const confirmDelete = window.confirm(
+      `Delete ${ids.length} contact${ids.length === 1 ? "" : "s"}? This can't be undone.`
+    );
+    if (!confirmDelete) return;
+
+    setBulkDeleting(true);
+    try {
+      await Promise.all(
+        ids.map((id) =>
+          fetch(`/api/crm/subscribers/${id}`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json", "x-admin-password": password },
+          })
+        )
+      );
+      setSubscribers((prev) => prev.filter((s) => !selectedSubscriberIds.has(s._id)));
+      setSelectedSubscriberIds(new Set());
+    } catch {
+      window.alert("Could not delete some contacts — refresh to see what's left.");
+    } finally {
+      setBulkDeleting(false);
+    }
+  };
+
+  const openResendCampaign = () => {
+    if (selectedSubscriberIds.size === 0) return;
+    setResendCampaignId("");
+    setResendStatus("");
+    setShowResendCampaign(true);
+    if (campaigns.length === 0) loadCampaigns(password);
+  };
+
+  const handleResendCampaign = async () => {
+    const campaign = campaigns.find((c) => c._id === resendCampaignId);
+    if (!campaign) {
+      setResendStatus("Choose a campaign to send.");
+      return;
+    }
+    const recipientIds = Array.from(selectedSubscriberIds);
+
+    const confirmSend = window.confirm(
+      `Send "${campaign.subject}" to ${recipientIds.length} contact${recipientIds.length === 1 ? "" : "s"}?`
+    );
+    if (!confirmSend) return;
+
+    setResendSending(true);
+    setResendStatus("Sending...");
+    try {
+      const res = await fetch("/api/crm/campaigns", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-admin-password": password },
+        body: JSON.stringify({
+          templateKey: campaign.templateKey,
+          subject: campaign.subject,
+          html: campaign.html,
+          recipientIds,
+        }),
+      });
+      const json = await res.json();
+
+      if (res.status === 429 || json.limitExceeded) {
+        setResendStatus("");
+        setLimitAlert(
+          json.message ||
+            `Sending to ${recipientIds.length} would exceed today's OUTREACH send limit.`
+        );
+        setSendLimit({ limit: json.limit, usedToday: json.usedToday, remaining: json.remaining });
+        return;
+      }
+
+      if (!res.ok) throw new Error("Send failed");
+
+      setResendStatus(`Sent to ${recipientIds.length} contact${recipientIds.length === 1 ? "" : "s"}.`);
+      loadCampaigns(password);
+      loadSendLimit(password);
+      setTimeout(() => {
+        setShowResendCampaign(false);
+        setResendStatus("");
+        setSelectedSubscriberIds(new Set());
+      }, 1200);
+    } catch {
+      setResendStatus("Could not send — try again.");
+    } finally {
+      setResendSending(false);
     }
   };
 
@@ -867,11 +989,49 @@ export default function AdminPage() {
         {loading && <p className="text-base-content/60">Loading...</p>}
         {loadError && <p className="text-error">{loadError}</p>}
 
+        {!loading && !loadError && subscribers.length > 0 && (
+          <div className="flex flex-wrap items-center gap-3 mb-3">
+            <button onClick={toggleSelectAll} className="btn btn-ghost btn-sm">
+              {allSelected ? "Deselect All" : `Select All (${subscribers.length})`}
+            </button>
+            {selectedSubscriberIds.size > 0 && (
+              <>
+                <span className="text-sm text-base-content/60">
+                  {selectedSubscriberIds.size} selected
+                </span>
+                <div className="dropdown">
+                  <label tabIndex={0} className="btn btn-primary btn-sm">
+                    Actions ▾
+                  </label>
+                  <ul tabIndex={0} className="dropdown-content menu menu-sm bg-base-100 border border-base-300 rounded-lg shadow-md w-52 z-10 p-1">
+                    <li><a onClick={openResendCampaign}>Send Existing Campaign</a></li>
+                    <li><a onClick={handleBulkDelete} className={bulkDeleting ? "pointer-events-none opacity-50" : "text-error"}>
+                      {bulkDeleting ? "Deleting..." : "Delete Selected"}
+                    </a></li>
+                  </ul>
+                </div>
+                <button onClick={clearSelection} className="btn btn-ghost btn-sm">
+                  Clear Selection
+                </button>
+              </>
+            )}
+          </div>
+        )}
+
         {!loading && !loadError && (
           <div className="overflow-x-auto border border-base-300 rounded-lg mb-16">
             <table className="table">
               <thead>
                 <tr>
+                  <th>
+                    <input
+                      type="checkbox"
+                      className="checkbox checkbox-sm"
+                      checked={allSelected}
+                      onChange={toggleSelectAll}
+                      aria-label="Select all"
+                    />
+                  </th>
                   <th>Actions</th>
                   <th>Name</th>
                   <th>Email</th>
@@ -885,6 +1045,15 @@ export default function AdminPage() {
               <tbody>
                 {subscribers.map((s) => (
                   <tr key={s._id}>
+                    <td>
+                      <input
+                        type="checkbox"
+                        className="checkbox checkbox-sm"
+                        checked={selectedSubscriberIds.has(s._id)}
+                        onChange={() => toggleSelected(s._id)}
+                        aria-label={`Select ${s.name || s.email}`}
+                      />
+                    </td>
                     <td>
                       <div className="flex gap-2">
                         <button onClick={() => openEdit(s)} className="btn btn-ghost btn-xs" title="Edit" aria-label="Edit">
@@ -1323,6 +1492,59 @@ export default function AdminPage() {
             </div>
           </div>
           <div className="modal-backdrop" onClick={() => setViewingMessage(null)} />
+        </div>
+      )}
+
+      {/* ── Send existing campaign to selected contacts ───────────────── */}
+      {showResendCampaign && (
+        <div className="modal modal-open">
+          <div className="modal-box max-w-lg">
+            <h3 className="font-display text-xl tracking-wide mb-1">Send Existing Campaign</h3>
+            <p className="text-sm text-base-content/60 mb-4">
+              Sending to {selectedSubscriberIds.size} selected contact{selectedSubscriberIds.size === 1 ? "" : "s"}.
+            </p>
+
+            {loadingCampaigns && <p className="text-base-content/60">Loading campaigns...</p>}
+
+            {!loadingCampaigns && campaigns.length === 0 && (
+              <p className="text-base-content/60">No past campaigns to resend yet.</p>
+            )}
+
+            {!loadingCampaigns && campaigns.length > 0 && (
+              <select
+                value={resendCampaignId}
+                onChange={(e) => setResendCampaignId(e.target.value)}
+                className="select select-bordered w-full"
+              >
+                <option value="">Choose a campaign...</option>
+                {campaigns.map((c) => (
+                  <option key={c._id} value={c._id}>
+                    {c.subject} — {new Date(c.createdAt).toLocaleDateString()}
+                  </option>
+                ))}
+              </select>
+            )}
+
+            {resendStatus && <p className="text-sm mt-3">{resendStatus}</p>}
+
+            <div className="modal-action">
+              <button
+                onClick={() => setShowResendCampaign(false)}
+                className="btn btn-ghost"
+                disabled={resendSending}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleResendCampaign}
+                className="btn btn-primary"
+                disabled={resendSending || !resendCampaignId}
+              >
+                {resendSending ? "Sending..." : "Send"}
+              </button>
+            </div>
+          </div>
+          <div className="modal-backdrop" onClick={() => !resendSending && setShowResendCampaign(false)} />
         </div>
       )}
 
