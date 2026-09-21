@@ -47,13 +47,6 @@ export default function DonatePage() {
               </h2>
               <div className="flex flex-col gap-2 text-base-content/80 text-sm">
                 <p>
-                  Prefer to mail a check? Send it to:
-                  <br />
-                  {config.nonprofit.legalName}
-                  <br />
-                  {config.location}
-                </p>
-                <p className="mt-2">
                   {config.nonprofit.legalName} is a registered 501(c)(3)
                   nonprofit. EIN: {config.nonprofit.ein}. Donations are
                   tax-deductible.

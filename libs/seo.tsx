@@ -60,8 +60,9 @@ export const getSEOTags = ({
 };
 
 // NGO structured data so Google can show rich results (hours, phone,
-// address, service area) for the nonprofit. Edit the fields as real
-// details come in.
+// service area) for the nonprofit. Edit the fields as real details come in.
+// No street address on purpose — this rescue doesn't publish its physical
+// location.
 export const renderLocalBusinessSchema = () => {
   return (
     <script
@@ -77,14 +78,6 @@ export const renderLocalBusinessSchema = () => {
           url: `https://${config.domainName}/`,
           telephone: config.phone.tel,
           email: config.contactEmail,
-          address: {
-            "@type": "PostalAddress",
-            streetAddress: "12865 West Dixie Highway, Suite 102",
-            addressLocality: "North Miami",
-            addressRegion: "FL",
-            postalCode: "33161",
-            addressCountry: "US",
-          },
           areaServed: config.serviceAreas.map((area) => ({
             "@type": "Place",
             name: `${area}, FL`,

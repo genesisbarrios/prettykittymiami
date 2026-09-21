@@ -27,7 +27,6 @@ const config = {
     tel: "3055284651",
   },
 
-  location: "12865 West Dixie Highway, Suite 102, North Miami, FL 33161",
   cityState: "North Miami, FL",
 
   // Areas served, used for SEO keywords and structured data.

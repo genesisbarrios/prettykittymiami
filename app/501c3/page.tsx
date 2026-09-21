@@ -59,12 +59,7 @@ export default function NonProfitPage() {
               WAYS TO DONATE
             </h2>
             <div className="flex flex-col gap-2 text-base-content/80 text-sm">
-              <p>Donate online, or mail a check to:</p>
-              <p>
-                {config.nonprofit?.legalName}
-                <br />
-                {config.location}
-              </p>
+              <p>Donate online.</p>
               <p className="mt-2">
                 Questions? Email{" "}
                 <a href={`mailto:${config.contactEmail}`} className="link text-primary">

@@ -78,17 +78,16 @@ export default function AboutPage() {
           </div>
 
           <div className="mt-12 grid sm:grid-cols-2 gap-8">
-            <div>
-              <h2 className="font-display text-2xl tracking-wide mb-4">
-                VISIT US
-              </h2>
-              <p className="text-base-content/80">{config.location}</p>
-              {config.hours && (
-                <p className="text-base-content/60 text-sm mt-2">
+            {config.hours && (
+              <div>
+                <h2 className="font-display text-2xl tracking-wide mb-4">
+                  HOURS
+                </h2>
+                <p className="text-base-content/60 text-sm">
                   {config.hours}
                 </p>
-              )}
-            </div>
+              </div>
+            )}
             {config.nonprofit && (
               <div>
                 <h2 className="font-display text-2xl tracking-wide mb-4">

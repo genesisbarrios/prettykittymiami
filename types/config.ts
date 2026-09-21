@@ -18,7 +18,6 @@ export interface ConfigProps {
     display: string;
     tel: string;
   };
-  location: string;
   cityState: string;
   // Cities/areas served, used to build SEO keywords, meta descriptions, and
   // the LocalBusiness structured data's areaServed list.

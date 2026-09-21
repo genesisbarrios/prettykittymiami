@@ -37,7 +37,6 @@ export default function ContactPage() {
               GET IN TOUCH
             </h2>
             <div className="flex flex-col gap-4 text-base-content/80">
-              <p>{config.location}</p>
               {config.hours && <p className="text-sm">{config.hours}</p>}
               <p>
                 For the fastest response, call{" "}

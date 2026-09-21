@@ -50,15 +50,16 @@ export default function Footer() {
               </div>
             </div>
 
-            <div>
-              <div className="text-xs uppercase tracking-widest text-base-content/50 mb-3">
-                Visit Us
+            {config.hours && (
+              <div>
+                <div className="text-xs uppercase tracking-widest text-base-content/50 mb-3">
+                  Hours
+                </div>
+                <div className="flex flex-col gap-2 text-sm text-base-content/70">
+                  <span>{config.hours}</span>
+                </div>
               </div>
-              <div className="flex flex-col gap-2 text-sm text-base-content/70">
-                <span>{config.location}</span>
-                {config.hours && <span>{config.hours}</span>}
-              </div>
-            </div>
+            )}
 
             <div className="col-span-2 sm:col-span-1">
               <div className="text-xs uppercase tracking-widest text-base-content/50 mb-3">
