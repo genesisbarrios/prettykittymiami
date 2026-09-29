@@ -74,23 +74,10 @@ export default function AboutPage() {
           </div>
 
           <div className="mt-10 flex flex-wrap gap-6">
-            <SocialLinks variant="accent" />
+            <SocialLinks variant="accent" className="items-center" />
           </div>
 
           <div className="mt-12 grid sm:grid-cols-2 gap-8">
-            {config.contactEmail && (
-              <div>
-                <h2 className="font-display text-2xl tracking-wide mb-4">
-                  CONTACT
-                </h2>
-                <a
-                  href={`mailto:${config.contactEmail}`}
-                  className="link text-primary text-sm"
-                >
-                  {config.contactEmail}
-                </a>
-              </div>
-            )}
             {config.hours && (
               <div>
                 <h2 className="font-display text-2xl tracking-wide mb-4">

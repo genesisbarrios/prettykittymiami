@@ -44,11 +44,30 @@ const PhoneIcon = () => (
   </svg>
 );
 
+const EmailIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0-.828.672-1.5 1.5-1.5h16.5c.828 0 1.5.672 1.5 1.5v10.5a1.5 1.5 0 01-1.5 1.5H3.75a1.5 1.5 0 01-1.5-1.5V6.75z" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75l9.75 6.75 9.75-6.75" />
+  </svg>
+);
+
 // Renders Instagram / Facebook / TikTok / Google Business / primary CTA /
-// phone as a row of icon links. Used on the homepage and in the footer per
-// client request that all socials stay visible in both places. Social
-// platform icons are icon-only (no text label) — Facebook/TikTok/Google
-// Business are skipped when no link is configured for a given client.
+// phone / email as a row of icon links, each with its platform name as a
+// text label. Used on the homepage and in the footer per client request
+// that all socials stay visible in both places, with the platform names
+// readable (not icon-only) so the footer's Connect column is self-
+// explanatory. Facebook/TikTok/Google Business/email are skipped when no
+// link is configured for a given client.
+//
+// The wrapping div only sets `flex flex-wrap gap-4` by default (no
+// items-center) so a caller's own alignment class (e.g. Footer/Contact's
+// `items-start`) always applies cleanly — putting items-center in the base
+// string and items-start in `className` at the same time is a genuine
+// conflict: Tailwind's generated stylesheet order (not className string
+// order) decides which one wins, and items-center was winning, silently
+// breaking every "left-justify the connect column" attempt. Callers that
+// want the default centered row (Home hero, About) pass `items-center`
+// themselves instead.
 export default function SocialLinks({
   variant = "default",
   className = "",
@@ -64,7 +83,7 @@ export default function SocialLinks({
       : "flex items-center gap-2 text-base-content/70 hover:text-primary transition-colors";
 
   return (
-    <div className={`flex flex-wrap items-center gap-4 ${className}`}>
+    <div className={`flex flex-wrap gap-4 ${className}`}>
       <a
         href={config.instagramUrl}
         target="_blank"
@@ -74,6 +93,7 @@ export default function SocialLinks({
         className={linkClass}
       >
         <InstagramIcon />
+        <span className="text-sm">Instagram</span>
       </a>
 
       {config.facebookUrl && (
@@ -86,6 +106,7 @@ export default function SocialLinks({
           className={linkClass}
         >
           <FacebookIcon />
+          <span className="text-sm">Facebook</span>
         </a>
       )}
 
@@ -99,6 +120,7 @@ export default function SocialLinks({
           className={linkClass}
         >
           <TikTokIcon />
+          <span className="text-sm">TikTok</span>
         </a>
       )}
 
@@ -112,6 +134,7 @@ export default function SocialLinks({
           className={linkClass}
         >
           <GoogleIcon />
+          <span className="text-sm">Google Reviews</span>
         </a>
       )}
 
@@ -148,6 +171,18 @@ export default function SocialLinks({
         <PhoneIcon />
         <span className="text-sm">{config.phone.display}</span>
       </a>
+
+      {config.contactEmail && (
+        <a
+          href={`mailto:${config.contactEmail}`}
+          aria-label={config.contactEmail}
+          title={config.contactEmail}
+          className={linkClass}
+        >
+          <EmailIcon />
+          <span className="text-sm">{config.contactEmail}</span>
+        </a>
+      )}
     </div>
   );
 }

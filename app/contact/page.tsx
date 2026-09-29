@@ -45,6 +45,15 @@ export default function ContactPage() {
                 </a>
                 .
               </p>
+              {config.contactEmail && (
+                <p>
+                  Or email us at{" "}
+                  <a href={`mailto:${config.contactEmail}`} className="link text-primary">
+                    {config.contactEmail}
+                  </a>
+                  .
+                </p>
+              )}
               <div>
                 <PrimaryCta className="btn btn-primary" />
               </div>
