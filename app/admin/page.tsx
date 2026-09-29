@@ -292,6 +292,8 @@ export default function AdminPage() {
   // ── Bulk selection on the main subscribers table ───────────────────────
   const [selectedSubscriberIds, setSelectedSubscriberIds] = useState<Set<string>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [subscriberSearch, setSubscriberSearch] = useState("");
+  const [subscriberSourceFilter, setSubscriberSourceFilter] = useState("all");
   const [showResendCampaign, setShowResendCampaign] = useState(false);
   const [resendCampaignId, setResendCampaignId] = useState("");
   const [resendSending, setResendSending] = useState(false);
@@ -554,6 +556,24 @@ export default function AdminPage() {
 
   // ── Bulk selection / actions on the main table ─────────────────────────
 
+  // Search + source filter for the main table. Select All and bulk actions
+  // only ever apply to the rows currently shown.
+  const sourceOptions = useMemo(
+    () => Array.from(new Set(subscribers.map((s) => s.source))).sort(),
+    [subscribers]
+  );
+
+  const visibleSubscribers = useMemo(() => {
+    const q = subscriberSearch.trim().toLowerCase();
+    return subscribers.filter((s) => {
+      if (subscriberSourceFilter !== "all" && s.source !== subscriberSourceFilter) return false;
+      if (!q) return true;
+      return [s.name, s.email, s.phone, s.message].some((v) => (v || "").toLowerCase().includes(q));
+    });
+  }, [subscribers, subscriberSearch, subscriberSourceFilter]);
+
+  const isFiltered = subscriberSearch.trim() !== "" || subscriberSourceFilter !== "all";
+
   const toggleSelected = (id: string) => {
     setSelectedSubscriberIds((prev) => {
       const next = new Set(prev);
@@ -563,10 +583,11 @@ export default function AdminPage() {
     });
   };
 
-  const allSelected = subscribers.length > 0 && subscribers.every((s) => selectedSubscriberIds.has(s._id));
+  const allSelected =
+    visibleSubscribers.length > 0 && visibleSubscribers.every((s) => selectedSubscriberIds.has(s._id));
 
   const toggleSelectAll = () => {
-    setSelectedSubscriberIds(allSelected ? new Set() : new Set(subscribers.map((s) => s._id)));
+    setSelectedSubscriberIds(allSelected ? new Set() : new Set(visibleSubscribers.map((s) => s._id)));
   };
 
   const clearSelection = () => setSelectedSubscriberIds(new Set());
@@ -581,18 +602,27 @@ export default function AdminPage() {
 
     setBulkDeleting(true);
     try {
-      await Promise.all(
+      // fetch() doesn't throw on a 4xx/5xx, so check each response and only
+      // drop the rows the backend actually deleted.
+      const results = await Promise.all(
         ids.map((id) =>
           fetch(`/api/crm/subscribers/${id}`, {
             method: "DELETE",
             headers: { "Content-Type": "application/json", "x-admin-password": password },
           })
+            .then((res) => ({ id, ok: res.ok }))
+            .catch(() => ({ id, ok: false }))
         )
       );
-      setSubscribers((prev) => prev.filter((s) => !selectedSubscriberIds.has(s._id)));
-      setSelectedSubscriberIds(new Set());
-    } catch {
-      window.alert("Could not delete some contacts — refresh to see what's left.");
+      const deleted = new Set(results.filter((r) => r.ok).map((r) => r.id));
+      setSubscribers((prev) => prev.filter((s) => !deleted.has(s._id)));
+      setComposerSelectedIds((prev) => new Set(Array.from(prev).filter((id) => !deleted.has(id))));
+      setSelectedSubscriberIds(new Set(ids.filter((id) => !deleted.has(id))));
+      if (deleted.size < ids.length) {
+        window.alert(
+          `Could not delete ${ids.length - deleted.size} contact${ids.length - deleted.size === 1 ? "" : "s"} — try again.`
+        );
+      }
     } finally {
       setBulkDeleting(false);
     }
@@ -991,8 +1021,40 @@ export default function AdminPage() {
 
         {!loading && !loadError && subscribers.length > 0 && (
           <div className="flex flex-wrap items-center gap-3 mb-3">
-            <button onClick={toggleSelectAll} className="btn btn-ghost btn-sm">
-              {allSelected ? "Deselect All" : `Select All (${subscribers.length})`}
+            <input
+              type="search"
+              value={subscriberSearch}
+              onChange={(e) => {
+                setSubscriberSearch(e.target.value);
+                clearSelection();
+              }}
+              placeholder="Search name, email, phone, message..."
+              className="input input-bordered input-sm w-full sm:w-72"
+              aria-label="Search contacts"
+            />
+            <select
+              value={subscriberSourceFilter}
+              onChange={(e) => {
+                setSubscriberSourceFilter(e.target.value);
+                clearSelection();
+              }}
+              className="select select-bordered select-sm"
+              aria-label="Filter by source"
+            >
+              <option value="all">All sources</option>
+              {sourceOptions.map((source) => (
+                <option key={source} value={source}>
+                  {SOURCE_LABELS[source] || source}
+                </option>
+              ))}
+            </select>
+            {isFiltered && (
+              <span className="text-sm text-base-content/60">
+                Showing {visibleSubscribers.length} of {subscribers.length}
+              </span>
+            )}
+            <button onClick={toggleSelectAll} className="btn btn-ghost btn-sm" disabled={!visibleSubscribers.length}>
+              {allSelected ? "Deselect All" : `Select All (${visibleSubscribers.length})`}
             </button>
             {selectedSubscriberIds.size > 0 && (
               <>
@@ -1043,7 +1105,7 @@ export default function AdminPage() {
                 </tr>
               </thead>
               <tbody>
-                {subscribers.map((s) => (
+                {visibleSubscribers.map((s) => (
                   <tr key={s._id}>
                     <td>
                       <input
@@ -1099,10 +1161,10 @@ export default function AdminPage() {
                     <td>{new Date(s.createdAt).toLocaleDateString()}</td>
                   </tr>
                 ))}
-                {subscribers.length === 0 && (
+                {visibleSubscribers.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="text-center text-base-content/50 py-8">
-                      No subscribers yet.
+                    <td colSpan={9} className="text-center text-base-content/50 py-8">
+                      {isFiltered ? "No contacts match these filters." : "No subscribers yet."}
                     </td>
                   </tr>
                 )}
