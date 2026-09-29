@@ -25,16 +25,10 @@ const GoogleIcon = () => (
   </svg>
 );
 
+// A heart — fits "Donate Now" far better than the old quotation-marks glyph.
 const QuoteIcon = () => (
-  <svg
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth={2}
-    className="w-5 h-5"
-  >
-    <path d="M4 17V7a2 2 0 012-2h4l-2 6h3l-2 6H6a2 2 0 01-2-2z" />
-    <path d="M13 17V7a2 2 0 012-2h4l-2 6h3l-2 6h-3a2 2 0 01-2-2z" />
+  <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
   </svg>
 );
 
@@ -51,13 +45,15 @@ const EmailIcon = () => (
   </svg>
 );
 
+type LinkKey = "instagram" | "facebook" | "tiktok" | "google" | "cta" | "phone" | "email";
+
 // Renders Instagram / Facebook / TikTok / Google Business / primary CTA /
-// phone / email as a row of icon links, each with its platform name as a
-// text label. Used on the homepage and in the footer per client request
-// that all socials stay visible in both places, with the platform names
-// readable (not icon-only) so the footer's Connect column is self-
-// explanatory. Facebook/TikTok/Google Business/email are skipped when no
-// link is configured for a given client.
+// phone / email as a row of icon links. Used on the homepage and in the
+// footer per client request that all socials stay visible in both places.
+// Facebook/TikTok/Google Business/email are skipped when no link is
+// configured for a given client. Pass `only` to render a subset, and
+// `iconOnly` to drop the text label next to each icon (e.g. the hero wants
+// every icon but no platform-name clutter).
 //
 // The wrapping div only sets `flex flex-wrap gap-4` by default (no
 // items-center) so a caller's own alignment class (e.g. Footer/Contact's
@@ -71,10 +67,16 @@ const EmailIcon = () => (
 export default function SocialLinks({
   variant = "default",
   className = "",
+  only,
+  iconOnly = false,
 }: {
   variant?: "default" | "accent" | "light";
   className?: string;
+  only?: LinkKey[];
+  iconOnly?: boolean;
 }) {
+  const show = (key: LinkKey) => !only || only.includes(key);
+
   const linkClass =
     variant === "accent"
       ? "flex items-center gap-2 text-primary hover:text-primary/80 transition-colors"
@@ -82,21 +84,26 @@ export default function SocialLinks({
       ? "flex items-center gap-2 text-white/90 hover:text-white transition-colors"
       : "flex items-center gap-2 text-base-content/70 hover:text-primary transition-colors";
 
+  const Label = ({ children }: { children: React.ReactNode }) =>
+    iconOnly ? null : <span className="text-sm">{children}</span>;
+
   return (
     <div className={`flex flex-wrap gap-4 ${className}`}>
-      <a
-        href={config.instagramUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label="Instagram"
-        title="Instagram"
-        className={linkClass}
-      >
-        <InstagramIcon />
-        <span className="text-sm">Instagram</span>
-      </a>
+      {show("instagram") && (
+        <a
+          href={config.instagramUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Instagram"
+          title="Instagram"
+          className={linkClass}
+        >
+          <InstagramIcon />
+          <Label>Instagram</Label>
+        </a>
+      )}
 
-      {config.facebookUrl && (
+      {show("facebook") && config.facebookUrl && (
         <a
           href={config.facebookUrl}
           target="_blank"
@@ -106,11 +113,11 @@ export default function SocialLinks({
           className={linkClass}
         >
           <FacebookIcon />
-          <span className="text-sm">Facebook</span>
+          <Label>Facebook</Label>
         </a>
       )}
 
-      {config.tiktokUrl && (
+      {show("tiktok") && config.tiktokUrl && (
         <a
           href={config.tiktokUrl}
           target="_blank"
@@ -120,11 +127,11 @@ export default function SocialLinks({
           className={linkClass}
         >
           <TikTokIcon />
-          <span className="text-sm">TikTok</span>
+          <Label>TikTok</Label>
         </a>
       )}
 
-      {config.googleBusinessUrl && (
+      {show("google") && config.googleBusinessUrl && (
         <a
           href={config.googleBusinessUrl}
           target="_blank"
@@ -134,45 +141,48 @@ export default function SocialLinks({
           className={linkClass}
         >
           <GoogleIcon />
-          <span className="text-sm">Google Reviews</span>
+          <Label>Google Reviews</Label>
         </a>
       )}
 
-      {config.primaryCta.external ? (
+      {show("cta") &&
+        (config.primaryCta.external ? (
+          <a
+            href={config.primaryCta.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={config.primaryCta.label}
+            title={config.primaryCta.label}
+            className={linkClass}
+          >
+            <QuoteIcon />
+            <Label>{config.primaryCta.label}</Label>
+          </a>
+        ) : (
+          <Link
+            href={config.primaryCta.href}
+            aria-label={config.primaryCta.label}
+            title={config.primaryCta.label}
+            className={linkClass}
+          >
+            <QuoteIcon />
+            <Label>{config.primaryCta.label}</Label>
+          </Link>
+        ))}
+
+      {show("phone") && (
         <a
-          href={config.primaryCta.href}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label={config.primaryCta.label}
-          title={config.primaryCta.label}
+          href={`tel:${config.phone.tel}`}
+          aria-label={config.phone.display}
+          title={config.phone.display}
           className={linkClass}
         >
-          <QuoteIcon />
-          <span className="text-sm">{config.primaryCta.label}</span>
+          <PhoneIcon />
+          <Label>{config.phone.display}</Label>
         </a>
-      ) : (
-        <Link
-          href={config.primaryCta.href}
-          aria-label={config.primaryCta.label}
-          title={config.primaryCta.label}
-          className={linkClass}
-        >
-          <QuoteIcon />
-          <span className="text-sm">{config.primaryCta.label}</span>
-        </Link>
       )}
 
-      <a
-        href={`tel:${config.phone.tel}`}
-        aria-label={config.phone.display}
-        title={config.phone.display}
-        className={linkClass}
-      >
-        <PhoneIcon />
-        <span className="text-sm">{config.phone.display}</span>
-      </a>
-
-      {config.contactEmail && (
+      {show("email") && config.contactEmail && (
         <a
           href={`mailto:${config.contactEmail}`}
           aria-label={config.contactEmail}
@@ -180,7 +190,7 @@ export default function SocialLinks({
           className={linkClass}
         >
           <EmailIcon />
-          <span className="text-sm">{config.contactEmail}</span>
+          <Label>{config.contactEmail}</Label>
         </a>
       )}
     </div>

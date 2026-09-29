@@ -103,7 +103,7 @@ export default function Home() {
             </div>
 
             <div className="mt-12 flex justify-center">
-              <SocialLinks variant="light" className="items-center" />
+              <SocialLinks variant="light" className="items-center" iconOnly />
             </div>
           </div>
         </section>
