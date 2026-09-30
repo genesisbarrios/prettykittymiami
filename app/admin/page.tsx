@@ -695,7 +695,7 @@ export default function AdminPage() {
   // ── Add contact ──────────────────────────────────────────────────────
 
   const openAddContact = () => {
-    setAddContactForm({ source: "contact_form" });
+    setAddContactForm({ source: "import" });
     setAddContactError("");
     setShowAddContact(true);
   };
@@ -725,7 +725,7 @@ export default function AdminPage() {
           email: addContactForm.email || "",
           phone: addContactForm.phone || "",
           message: addContactForm.message || "",
-          source: addContactForm.source || "contact_form",
+          source: addContactForm.source || "import",
           interestedAdopting: Boolean(addContactForm.interestedAdopting),
           interestedFostering: Boolean(addContactForm.interestedFostering),
           interestedVolunteering: Boolean(addContactForm.interestedVolunteering),
@@ -1455,7 +1455,7 @@ export default function AdminPage() {
                 className="input input-bordered w-full"
               />
               <select
-                value={addContactForm.source || "contact_form"}
+                value={addContactForm.source || "import"}
                 onChange={(e) => setAddContactForm((f) => ({ ...f, source: e.target.value }))}
                 className="select select-bordered w-full"
               >
