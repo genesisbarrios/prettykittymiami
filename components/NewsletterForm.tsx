@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from "react";
 import config from "@/config";
+import { TurnstileWidget, useSpamGuard } from "@/components/SpamGuard";
 
 type Status = "idle" | "loading" | "success" | "error";
 
@@ -26,6 +27,7 @@ export default function NewsletterForm({
   // input on the page do. Combined with formLoadedAt (a timing trap: humans
   // take at least a couple seconds to fill the form) on the backend.
   const [formLoadedAt] = useState(() => Date.now());
+  const spamGuard = useSpamGuard();
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -51,6 +53,7 @@ export default function NewsletterForm({
           source: "newsletter",
           website: data.get("website"),
           formLoadedAt,
+          ...spamGuard.getFields(data),
         }),
       });
 
@@ -59,6 +62,7 @@ export default function NewsletterForm({
       setStatus("success");
       form.reset();
     } catch {
+      spamGuard.reset();
       setStatus("error");
     }
   };
@@ -97,6 +101,7 @@ export default function NewsletterForm({
           className="input input-bordered w-full"
         />
       </div>
+      <TurnstileWidget widgetIdRef={spamGuard.widgetIdRef} />
       <div className="flex flex-col sm:flex-row gap-3">
         <input
           type="email"

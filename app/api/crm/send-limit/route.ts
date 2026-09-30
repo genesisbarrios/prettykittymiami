@@ -4,11 +4,12 @@ import config from "@/config";
 // Server-only — see app/api/crm/subscribers/route.ts for why these env vars
 // are unprefixed. Backs the OUTREACH panel's daily send-limit display.
 const ENIGMA_API_URL = process.env.ENIGMA_API_URL || "http://localhost:5001";
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "pw";
+// Fails closed: with no ADMIN_PASSWORD set, nobody gets in.
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
 
 export async function GET(req: NextRequest) {
   const password = req.headers.get("x-admin-password");
-  if (password !== ADMIN_PASSWORD) {
+  if (!ADMIN_PASSWORD || password !== ADMIN_PASSWORD) {
     return NextResponse.json({ ok: false, message: "Invalid admin password." }, { status: 401 });
   }
 

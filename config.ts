@@ -69,10 +69,6 @@ const config = {
     main: "#d1638a",
   },
 
-  crm: {
-    apiUrl:
-      process.env.NEXT_PUBLIC_ENIGMA_API_URL || "http://localhost:5000",
-  },
 } as ConfigProps;
 
 export default config;

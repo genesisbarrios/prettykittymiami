@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as XLSX from "xlsx";
 import config from "@/config";
+import { InternalAnalyticsCards, WebsiteAnalytics } from "@/components/admin/AnalyticsPanels";
 
 interface Subscriber {
   _id: string;
@@ -935,7 +936,7 @@ export default function AdminPage() {
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
           <h1 className="font-display text-3xl tracking-wide">
-            NEWSLETTER & CONTACT SUBSCRIBERS
+            MAILING LIST & ANALYTICS
           </h1>
           <button
             onClick={() => {
@@ -947,6 +948,8 @@ export default function AdminPage() {
             Log Out
           </button>
         </div>
+
+        <InternalAnalyticsCards password={password} />
 
         <div className="flex flex-wrap gap-3 mb-6">
           <button onClick={openAddContact} className="btn btn-primary btn-sm">
@@ -1314,6 +1317,8 @@ export default function AdminPage() {
             </table>
           </div>
         )}
+
+        <WebsiteAnalytics password={password} />
       </div>
 
       {/* ── Edit subscriber modal ──────────────────────────────────── */}

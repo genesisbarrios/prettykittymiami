@@ -3,6 +3,7 @@ import { Bebas_Neue, Inter } from "next/font/google";
 import { Viewport } from "next";
 import { getSEOTags, renderLocalBusinessSchema } from "@/libs/seo";
 import config from "@/config";
+import Tracking from "@/components/Tracking";
 import "./globals.css";
 
 const body = Inter({ subsets: ["latin"], variable: "--font-body" });
@@ -28,7 +29,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       className={`${body.variable} ${display.variable}`}
     >
       <head>{renderLocalBusinessSchema()}</head>
-      <body className="font-sans">{children}</body>
+      <body className="font-sans">
+        {children}
+        <Tracking />
+      </body>
     </html>
   );
 }

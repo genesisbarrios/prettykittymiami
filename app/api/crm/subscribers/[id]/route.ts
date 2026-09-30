@@ -5,11 +5,12 @@ import config from "@/config";
 // are unprefixed. Edit/delete for a single subscriber, used by the admin
 // table's Edit and Delete buttons.
 const ENIGMA_API_URL = process.env.ENIGMA_API_URL || "http://localhost:5001";
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "pw";
+// Fails closed: with no ADMIN_PASSWORD set, nobody gets in.
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
 
 function checkPassword(req: NextRequest) {
   const password = req.headers.get("x-admin-password");
-  return password === ADMIN_PASSWORD;
+  return ADMIN_PASSWORD !== "" && password === ADMIN_PASSWORD;
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {

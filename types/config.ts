@@ -49,7 +49,4 @@ export interface ConfigProps {
     theme: Theme;
     main: string;
   };
-  crm: {
-    apiUrl: string;
-  };
 }

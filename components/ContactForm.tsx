@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from "react";
 import config from "@/config";
+import { TurnstileWidget, useSpamGuard } from "@/components/SpamGuard";
 
 type Status = "idle" | "loading" | "success" | "error";
 
@@ -11,6 +12,7 @@ export default function ContactForm() {
   // input on the page do. Combined with formLoadedAt (a timing trap: humans
   // take at least a few seconds to fill the form) on the backend.
   const [formLoadedAt] = useState(() => Date.now());
+  const spamGuard = useSpamGuard();
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -45,6 +47,7 @@ export default function ContactForm() {
           interestedStrays: data.get("interestedStrays") === "on",
           website: data.get("website"),
           formLoadedAt,
+          ...spamGuard.getFields(data),
         }),
       });
 
@@ -53,6 +56,7 @@ export default function ContactForm() {
       setStatus("success");
       form.reset();
     } catch {
+      spamGuard.reset();
       setStatus("error");
     }
   };
@@ -129,6 +133,7 @@ export default function ContactForm() {
         rows={4}
         className="textarea textarea-bordered w-full"
       />
+      <TurnstileWidget widgetIdRef={spamGuard.widgetIdRef} />
       <button
         type="submit"
         disabled={status === "loading"}
