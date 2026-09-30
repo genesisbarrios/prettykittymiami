@@ -6,6 +6,8 @@ import { useCallback, useEffect, useState } from "react";
 // own /api/crm/* routes with the admin password the user typed.
 
 type Stats = {
+  visitors: number;
+  pageViews: number;
   newsletterSignups: number;
   contactSubmissions: number;
   phoneClicks: number;
@@ -54,7 +56,8 @@ type Settings = {
   searchConsoleSiteUrl: string;
 };
 
-const fmt = (n: number) => n.toLocaleString();
+// Treats a missing number as 0 (e.g. an older backend without visitor counts).
+const fmt = (n?: number) => (n ?? 0).toLocaleString();
 
 function RangePicker({
   value,
@@ -123,7 +126,12 @@ export function InternalAnalyticsCards({ password }: { password: string }) {
         />
       </div>
       {error && <p className="text-error text-sm mb-2">{error}</p>}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        <StatCard
+          label="Site Visitors"
+          value={stats ? fmt(stats.visitors) : "—"}
+          detail={stats ? `${fmt(stats.pageViews)} page views` : undefined}
+        />
         <StatCard label="Newsletter Signups" value={stats ? fmt(stats.newsletterSignups) : "—"} />
         <StatCard label="Contact Form" value={stats ? fmt(stats.contactSubmissions) : "—"} />
         <StatCard label="Phone Clicks" value={stats ? fmt(stats.phoneClicks) : "—"} />

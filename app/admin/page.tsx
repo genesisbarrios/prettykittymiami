@@ -295,6 +295,8 @@ export default function AdminPage() {
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [subscriberSearch, setSubscriberSearch] = useState("");
   const [subscriberSourceFilter, setSubscriberSourceFilter] = useState("all");
+  const [subscriberPage, setSubscriberPage] = useState(1);
+  const [subscriberPageSize, setSubscriberPageSize] = useState(10);
   const [showResendCampaign, setShowResendCampaign] = useState(false);
   const [resendCampaignId, setResendCampaignId] = useState("");
   const [resendSending, setResendSending] = useState(false);
@@ -574,6 +576,19 @@ export default function AdminPage() {
   }, [subscribers, subscriberSearch, subscriberSourceFilter]);
 
   const isFiltered = subscriberSearch.trim() !== "" || subscriberSourceFilter !== "all";
+
+  // Main table pagination — 10 rows by default. Search, Select All, and bulk
+  // actions still cover every filtered row, not just the current page.
+  const pageCount = Math.max(1, Math.ceil(visibleSubscribers.length / subscriberPageSize));
+  const currentPage = Math.min(subscriberPage, pageCount);
+  const pagedSubscribers = visibleSubscribers.slice(
+    (currentPage - 1) * subscriberPageSize,
+    currentPage * subscriberPageSize
+  );
+
+  useEffect(() => {
+    setSubscriberPage(1);
+  }, [subscriberSearch, subscriberSourceFilter, subscriberPageSize]);
 
   const toggleSelected = (id: string) => {
     setSelectedSubscriberIds((prev) => {
@@ -951,6 +966,8 @@ export default function AdminPage() {
 
         <InternalAnalyticsCards password={password} />
 
+        <h2 className="font-display text-2xl tracking-wide mb-4">NEWSLETTER &amp; CONTACT SUBSCRIBERS</h2>
+
         <div className="flex flex-wrap gap-3 mb-6">
           <button onClick={openAddContact} className="btn btn-primary btn-sm">
             + Add Contact
@@ -1084,7 +1101,8 @@ export default function AdminPage() {
         )}
 
         {!loading && !loadError && (
-          <div className="overflow-x-auto border border-base-300 rounded-lg mb-16">
+          <>
+          <div className={`overflow-x-auto border border-base-300 rounded-lg ${visibleSubscribers.length ? "" : "mb-16"}`}>
             <table className="table">
               <thead>
                 <tr>
@@ -1108,7 +1126,7 @@ export default function AdminPage() {
                 </tr>
               </thead>
               <tbody>
-                {visibleSubscribers.map((s) => (
+                {pagedSubscribers.map((s) => (
                   <tr key={s._id}>
                     <td>
                       <input
@@ -1174,6 +1192,50 @@ export default function AdminPage() {
               </tbody>
             </table>
           </div>
+          {visibleSubscribers.length > 0 && (
+            <div className="flex flex-wrap items-center justify-between gap-3 mt-3 mb-16">
+              <span className="text-sm text-base-content/60">
+                Showing {(currentPage - 1) * subscriberPageSize + 1}–
+                {Math.min(currentPage * subscriberPageSize, visibleSubscribers.length)} of {visibleSubscribers.length}
+              </span>
+              <div className="flex items-center gap-2">
+                <select
+                  value={subscriberPageSize}
+                  onChange={(e) => setSubscriberPageSize(Number(e.target.value))}
+                  className="select select-bordered select-sm"
+                  aria-label="Rows per page"
+                >
+                  {[10, 25, 50, 100].map((n) => (
+                    <option key={n} value={n}>
+                      {n} per page
+                    </option>
+                  ))}
+                </select>
+                <div className="join">
+                  <button
+                    onClick={() => setSubscriberPage(currentPage - 1)}
+                    disabled={currentPage <= 1}
+                    className="join-item btn btn-sm"
+                    aria-label="Previous page"
+                  >
+                    «
+                  </button>
+                  <span className="join-item btn btn-sm pointer-events-none">
+                    Page {currentPage} of {pageCount}
+                  </span>
+                  <button
+                    onClick={() => setSubscriberPage(currentPage + 1)}
+                    disabled={currentPage >= pageCount}
+                    className="join-item btn btn-sm"
+                    aria-label="Next page"
+                  >
+                    »
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          </>
         )}
 
         {/* ── OUTREACH ──────────────────────────────────────────────── */}
