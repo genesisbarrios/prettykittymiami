@@ -36,6 +36,8 @@ export interface ConfigProps {
   tiktokUrl?: string;
   googleBusinessUrl?: string;
   contactEmail: string;
+  // Full public URL of the logo shown in campaign email signatures.
+  emailLogoUrl?: string;
   // Nonprofit-specific fields (used by the LocalBusiness/NGO schema and the
   // About/Donate content). Leave undefined for a for-profit client.
   nonprofit?: {

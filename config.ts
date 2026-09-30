@@ -53,6 +53,8 @@ const config = {
   tiktokUrl: "https://www.tiktok.com/@prettykittymiamirescue",
   googleBusinessUrl: "",
   contactEmail: "prettykittymiamirescue@gmail.com",
+  // Logo under the business name in campaign email signatures (full URL).
+  emailLogoUrl: "https://www.prettykittymiamirescue.org/logo.png",
 
   hours: "Mon–Fri 8am–6pm ET · Sat–Sun 8am–1pm ET",
 
