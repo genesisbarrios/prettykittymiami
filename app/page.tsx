@@ -97,12 +97,6 @@ export default function Home() {
 
             <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
               <PrimaryCta className="btn btn-primary btn-lg" />
-              <a
-                href={`tel:${config.phone.tel}`}
-                className="btn btn-outline btn-lg text-white border-white hover:bg-white hover:text-black"
-              >
-                Call Us
-              </a>
             </div>
 
             <div className="mt-12 flex justify-center">
