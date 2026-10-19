@@ -143,7 +143,7 @@ export default function ContactForm() {
       </button>
       {status === "error" && (
         <p className="text-error text-sm">
-          Something went wrong — please call or text us at {config.phone.display} instead.
+          Something went wrong — please call or text us instead.
         </p>
       )}
     </form>

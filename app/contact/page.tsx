@@ -39,9 +39,9 @@ export default function ContactPage() {
             <div className="flex flex-col gap-4 text-base-content/80">
               {config.hours && <p className="text-sm">{config.hours}</p>}
               <p>
-                For the fastest response, call{" "}
+                For the fastest response,{" "}
                 <a href={`tel:${config.phone.tel}`} className="link text-primary">
-                  {config.phone.display}
+                  give us a call
                 </a>
                 .
               </p>

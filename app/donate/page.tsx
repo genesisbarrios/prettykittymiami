@@ -52,9 +52,9 @@ export default function DonatePage() {
                   tax-deductible.
                 </p>
                 <p className="mt-2">
-                  Questions about donating? Call{" "}
+                  Questions about donating?{" "}
                   <a href={`tel:${config.phone.tel}`} className="link text-primary">
-                    {config.phone.display}
+                    Call us
                   </a>{" "}
                   or{" "}
                   <a href="/contact" className="link text-primary">

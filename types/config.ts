@@ -47,6 +47,12 @@ export interface ConfigProps {
     established501c3: string;
   };
   hours?: string;
+  // "We're full" banner (homepage) + other-rescues section (About page).
+  // Flip `enabled` to false once they're taking cats again.
+  atCapacity?: {
+    enabled: boolean;
+    message: string;
+  };
   colors: {
     theme: Theme;
     main: string;

@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import SocialLinks from "@/components/SocialLinks";
 import NewsletterForm from "@/components/NewsletterForm";
 import PrimaryCta from "@/components/PrimaryCta";
+import { AtCapacityBanner } from "@/components/AtCapacity";
 import config from "@/config";
 import { getInvolvedOptions } from "@/data/get-involved";
 import { getSEOTags } from "@/libs/seo";
@@ -66,6 +67,8 @@ export default function Home() {
     <>
       <Header />
       <main>
+        <AtCapacityBanner />
+
         {/* Hero */}
         <section className="relative overflow-hidden border-b border-base-300">
           <Image
@@ -98,7 +101,7 @@ export default function Home() {
                 href={`tel:${config.phone.tel}`}
                 className="btn btn-outline btn-lg text-white border-white hover:bg-white hover:text-black"
               >
-                Call {config.phone.display}
+                Call Us
               </a>
             </div>
 

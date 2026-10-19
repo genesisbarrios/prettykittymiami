@@ -58,6 +58,13 @@ const config = {
 
   hours: "Mon–Fri 8am–6pm ET · Sat–Sun 8am–1pm ET",
 
+  // Set enabled: false when they're taking in cats again — hides the
+  // homepage banner and the About page "We're full" section.
+  atCapacity: {
+    enabled: true,
+    message: "We're at full capacity and can't take in any more cats right now.",
+  },
+
   nonprofit: {
     legalName: "Pretty Kitty Miami-Dade Rescue Inc",
     ein: "85-3004159",

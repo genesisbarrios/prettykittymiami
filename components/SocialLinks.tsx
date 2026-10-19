@@ -64,16 +64,22 @@ type LinkKey = "instagram" | "facebook" | "tiktok" | "google" | "cta" | "phone" 
 // breaking every "left-justify the connect column" attempt. Callers that
 // want the default centered row (Home hero, About) pass `items-center`
 // themselves instead.
+//
+// The phone number itself is hidden by default (label/tooltip say "Call us",
+// the tel: link still works) — the client was getting spam calls. Only the
+// About page passes `showPhoneNumber` to print the actual number.
 export default function SocialLinks({
   variant = "default",
   className = "",
   only,
   iconOnly = false,
+  showPhoneNumber = false,
 }: {
   variant?: "default" | "accent" | "light";
   className?: string;
   only?: LinkKey[];
   iconOnly?: boolean;
+  showPhoneNumber?: boolean;
 }) {
   const show = (key: LinkKey) => !only || only.includes(key);
 
@@ -173,12 +179,12 @@ export default function SocialLinks({
       {show("phone") && (
         <a
           href={`tel:${config.phone.tel}`}
-          aria-label={config.phone.display}
-          title={config.phone.display}
+          aria-label={showPhoneNumber ? config.phone.display : "Call us"}
+          title={showPhoneNumber ? config.phone.display : "Call us"}
           className={linkClass}
         >
           <PhoneIcon />
-          <Label>{config.phone.display}</Label>
+          <Label>{showPhoneNumber ? config.phone.display : "Call us"}</Label>
         </a>
       )}
 

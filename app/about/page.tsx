@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import NewsletterForm from "@/components/NewsletterForm";
 import PageBanner from "@/components/PageBanner";
 import SocialLinks from "@/components/SocialLinks";
+import { AtCapacitySection } from "@/components/AtCapacity";
 import config from "@/config";
 import { getSEOTags } from "@/libs/seo";
 
@@ -74,7 +75,7 @@ export default function AboutPage() {
           </div>
 
           <div className="mt-10 flex flex-wrap gap-6">
-            <SocialLinks variant="accent" className="items-center" />
+            <SocialLinks variant="accent" className="items-center" showPhoneNumber />
           </div>
 
           <div className="mt-12 grid sm:grid-cols-2 gap-8">
@@ -101,6 +102,8 @@ export default function AboutPage() {
               </div>
             )}
           </div>
+
+          <AtCapacitySection />
 
           <div className="mt-12 rounded-lg border border-base-300 bg-base-200 p-8 text-center">
             <h2 className="font-display text-2xl tracking-wide">

@@ -65,9 +65,9 @@ export default function NonProfitPage() {
                 <a href={`mailto:${config.contactEmail}`} className="link text-primary">
                   {config.contactEmail}
                 </a>{" "}
-                or call{" "}
+                or{" "}
                 <a href={`tel:${config.phone?.tel}`} className="link text-primary">
-                  {config.phone?.display}
+                  call us
                 </a>
                 .
               </p>
