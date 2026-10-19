@@ -10,9 +10,10 @@ export function AtCapacityBanner() {
   if (!config.atCapacity?.enabled) return null;
   return (
     <section className="bg-primary text-primary-content border-b border-base-300">
-      <div className="max-w-6xl mx-auto px-6 py-5 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 text-center sm:text-left">
-        <p className="font-medium">
-          <span className="font-display tracking-wide text-lg mr-2">WE&apos;RE FULL.</span>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 text-center sm:text-left">
+        {/* One line on mobile: no wrapping, font scales with screen width so
+            the full message fits (button drops to its own line below). */}
+        <p className="font-medium whitespace-nowrap text-[length:clamp(0.625rem,calc((100vw-2rem)/34),1rem)] sm:whitespace-normal sm:text-base">
           {config.atCapacity.message}
         </p>
         <Link href="/about#other-rescues" className="btn btn-sm btn-neutral shrink-0">
