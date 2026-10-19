@@ -77,7 +77,7 @@ export default function AboutPage() {
           </div>
 
           <div className="mt-10 flex flex-wrap gap-6">
-            <SocialLinks variant="accent" className="items-center" showPhoneNumber />
+            <SocialLinks variant="accent" className="items-center" showPhoneNumber showContactLink />
           </div>
 
           <div className="mt-12 grid sm:grid-cols-2 gap-8">

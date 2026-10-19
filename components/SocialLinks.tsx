@@ -38,6 +38,12 @@ const PhoneIcon = () => (
   </svg>
 );
 
+const ChatIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h8M8 14h5M21 12a8.5 8.5 0 01-12.6 7.45L3 21l1.55-5.4A8.5 8.5 0 1121 12z" />
+  </svg>
+);
+
 const EmailIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
     <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0-.828.672-1.5 1.5-1.5h16.5c.828 0 1.5.672 1.5 1.5v10.5a1.5 1.5 0 01-1.5 1.5H3.75a1.5 1.5 0 01-1.5-1.5V6.75z" />
@@ -67,19 +73,23 @@ type LinkKey = "instagram" | "facebook" | "tiktok" | "google" | "cta" | "phone" 
 //
 // The phone number itself is hidden by default (label/tooltip say "Call us",
 // the tel: link still works) — the client was getting spam calls. Only the
-// About page passes `showPhoneNumber` to print the actual number.
+// About page passes `showPhoneNumber` to print the actual number — and when
+// it does, phone + email drop to their own row together.
+// `showContactLink` adds a "Contact Us" link to /contact after the CTA.
 export default function SocialLinks({
   variant = "default",
   className = "",
   only,
   iconOnly = false,
   showPhoneNumber = false,
+  showContactLink = false,
 }: {
   variant?: "default" | "accent" | "light";
   className?: string;
   only?: LinkKey[];
   iconOnly?: boolean;
   showPhoneNumber?: boolean;
+  showContactLink?: boolean;
 }) {
   const show = (key: LinkKey) => !only || only.includes(key);
 
@@ -176,6 +186,15 @@ export default function SocialLinks({
           </Link>
         ))}
 
+      {showContactLink && (
+        <Link href="/contact" aria-label="Contact Us" title="Contact Us" className={linkClass}>
+          <ChatIcon />
+          <Label>Contact Us</Label>
+        </Link>
+      )}
+
+      {/* Phone + email share their own row when the number is shown. */}
+      <div className={showPhoneNumber ? "basis-full flex flex-wrap gap-4" : "contents"}>
       {show("phone") && (
         <a
           href={`tel:${config.phone.tel}`}
@@ -199,6 +218,7 @@ export default function SocialLinks({
           <Label>{config.contactEmail}</Label>
         </a>
       )}
+      </div>
     </div>
   );
 }
