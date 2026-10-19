@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 import NewsletterForm from "@/components/NewsletterForm";
 import PageBanner from "@/components/PageBanner";
 import SocialLinks from "@/components/SocialLinks";
-import { AtCapacitySection } from "@/components/AtCapacity";
+import { AtCapacityBanner, AtCapacitySection } from "@/components/AtCapacity";
 import config from "@/config";
 import { getSEOTags } from "@/libs/seo";
 
@@ -21,6 +21,8 @@ export default function AboutPage() {
     <>
       <Header />
       <main>
+        <AtCapacityBanner />
+
         <PageBanner
           title="ABOUT PRETTY KITTY"
           description="Rescuing, rehabilitating, and rehoming Miami-Dade's community cats since 2015."
