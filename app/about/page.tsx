@@ -21,12 +21,12 @@ export default function AboutPage() {
     <>
       <Header />
       <main>
-        <AtCapacityBanner />
-
         <PageBanner
           title="ABOUT PRETTY KITTY"
           description="Rescuing, rehabilitating, and rehoming Miami-Dade's community cats since 2015."
         />
+
+        <AtCapacityBanner />
 
         <section className="max-w-3xl mx-auto px-6 py-16">
           <div className="flex flex-col gap-4 text-base-content/80 leading-relaxed">
