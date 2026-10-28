@@ -5,6 +5,7 @@ import * as XLSX from "xlsx";
 import config from "@/config";
 import { InternalAnalyticsCards, WebsiteAnalytics } from "@/components/admin/AnalyticsPanels";
 
+import SiteQrCode from "@/components/admin/SiteQrCode";
 interface Subscriber {
   _id: string;
   name?: string;
@@ -961,6 +962,7 @@ export default function AdminPage() {
           <h1 className="font-display text-3xl tracking-wide">
             MAILING LIST & ANALYTICS
           </h1>
+          <SiteQrCode />
           <button
             onClick={() => {
               sessionStorage.removeItem(SESSION_KEY);
